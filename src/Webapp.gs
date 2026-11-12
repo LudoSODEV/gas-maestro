@@ -13,7 +13,7 @@ Maestro.Webapp = {
 	getUserRepositories ()
 	{
 		const props = PropertiesService.getUserProperties();
-		const rawData = props.getProperty('BA_REPOSITORIES');
+		const rawData = props.getProperty('MAESTRO_REPOSITORIES');
 		
 		if (rawData)
 		{
@@ -26,7 +26,7 @@ Maestro.Webapp = {
 	saveUserRepositories (repos)
 	{
 		const props = PropertiesService.getUserProperties();
-		props.setProperty('BA_REPOSITORIES', JSON.stringify(repos));
+		props.setProperty('MAESTRO_REPOSITORIES', JSON.stringify(repos));
 		return { success: true };
 	},
 
@@ -56,10 +56,10 @@ Maestro.Webapp = {
 			return repo;
 		}
 		
-		// Search Google Drive for existing repository with matching BA_REPOSITORY_ID property
+		// Search Google Drive for existing repository with matching MAESTRO_REPOSITORY_ID property
 		try
 		{
-			const query = 'properties has { key=\'BA_REPOSITORY_ID\' and value=\'' + baId + '\' and visibility=\'PUBLIC\' } and trashed = false';
+			const query = 'properties has { key=\'MAESTRO_REPOSITORY_ID\' and value=\'' + baId + '\' and visibility=\'PUBLIC\' } and trashed = false';
 			const result = Drive.Files.list({ q: query });
 			
 			if (result && result.items && result.items.length > 0)

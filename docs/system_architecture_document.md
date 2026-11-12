@@ -90,7 +90,7 @@ To eliminate name collisions and prevent pollution of the global scope in Google
 
 ### 4.1 Multi-BA Configuration Schema (`UserProperties`)
 
-Repositories are saved per user as a JSON array string under the property key `BA_REPOSITORIES`.
+Repositories are saved per user as a JSON array string under the property key `MAESTRO_REPOSITORIES`.
 
 ```json
 [
@@ -112,7 +112,7 @@ Repositories are saved per user as a JSON array string under the property key `B
 ```javascript
 function getUserRepositories() {
   const props = PropertiesService.getUserProperties();
-  const rawData = props.getProperty('BA_REPOSITORIES');
+  const rawData = props.getProperty('MAESTRO_REPOSITORIES');
   return rawData ? JSON.parse(rawData) : [];
 }
 
@@ -126,7 +126,7 @@ function saveRepository(baId, baName, spreadsheetId) {
     repos.push({ baId, baName, spreadsheetId });
   }
   
-  PropertiesService.getUserProperties().setProperty('BA_REPOSITORIES', JSON.stringify(repos));
+  PropertiesService.getUserProperties().setProperty('MAESTRO_REPOSITORIES', JSON.stringify(repos));
 }
 ```
 
@@ -180,7 +180,7 @@ function createAndTagRepository(baId, baName) {
   
   // Tag the spreadsheet file with a custom Drive property so it can be automatically discovered
   Drive.Properties.insert({
-    key: 'BA_REPOSITORY_ID',
+    key: 'MAESTRO_REPOSITORY_ID',
     value: baId,
     visibility: 'PUBLIC'
   }, spreadsheetId);
@@ -191,7 +191,7 @@ function createAndTagRepository(baId, baName) {
 
 function discoverUserRepositories() {
   // Search for files tagged with the BA repository property that the user has access to
-  const query = "properties has { key='BA_REPOSITORY_ID' and visibility='PUBLIC' } and trashed = false";
+  const query = "properties has { key='MAESTRO_REPOSITORY_ID' and visibility='PUBLIC' } and trashed = false";
   const files = Drive.Files.list({ q: query });
   
   return files.items.map(item => ({

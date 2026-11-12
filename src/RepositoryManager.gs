@@ -12,12 +12,12 @@ Maestro.RepositoryManager = class RepositoryManager
 		const ss = SpreadsheetApp.create('BA Repository - ' + resolvedBaName + ' (' + normalizedBaId + ')');
 		const spreadsheetId = ss.getId();
 		
-		// Tag file with BA_REPOSITORY_ID property
+		// Tag file with MAESTRO_REPOSITORY_ID property
 		try
 		{
 			Drive.Properties.insert
 			({
-				key: 'BA_REPOSITORY_ID',
+				key: 'MAESTRO_REPOSITORY_ID',
 				value: normalizedBaId,
 				visibility: 'PUBLIC'
 			}, spreadsheetId);
@@ -27,7 +27,7 @@ Maestro.RepositoryManager = class RepositoryManager
 			try
 			{
 				const file = DriveApp.getFileById(spreadsheetId);
-				file.setDescription('BA_REPOSITORY_ID: ' + normalizedBaId);
+				file.setDescription('MAESTRO_REPOSITORY_ID: ' + normalizedBaId);
 			}
 			catch (err)
 			{
@@ -79,7 +79,7 @@ Maestro.RepositoryManager = class RepositoryManager
 		
 		try
 		{
-			const query = 'properties has { key=\'BA_REPOSITORY_ID\' and value=\'' + normalizedBaId + '\' and visibility=\'PUBLIC\' } and trashed = false';
+			const query = 'properties has { key=\'MAESTRO_REPOSITORY_ID\' and value=\'' + normalizedBaId + '\' and visibility=\'PUBLIC\' } and trashed = false';
 			const result = Drive.Files.list({ q: query });
 			
 			if (result && result.items && result.items.length > 0)
