@@ -7,6 +7,9 @@ This document defines the table schemas for data stored within branch DB files. 
 - The first row of each worksheet represents the **Table Schema** (header row).
 - All data ingestion and manipulations are performed programmatically without relying on Google Sheet formulae.
 
+## Normalization Policy
+Because Google Sheets cannot perform efficient joins, read-heavy data may be stored in 1NF. Core entities MUST be stored in 2NF and SHOULD be stored in 3NF if feasible.
+
 ---
 
 ## AssoConnect Mirroring Policy

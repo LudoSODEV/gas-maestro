@@ -11,6 +11,7 @@ A DB file in **Maestro** is a dedicated Google Sheet acting as the primary local
   - **Sheet = Table**: Individual worksheets within the spreadsheet represent database tables.
   - **Header Row = Table Schema**: Each table starts with a mandatory header row defining column fields.
   - **DBMS-Compatible Abstraction**: DB operations are designed with semantic interfaces (table creation, schema alteration, row insertion/querying) to mirror classic DBMS concepts and simplify future migration to a full DBMS stack.
+- **Normalization Policy**: Because Google Sheets cannot perform efficient joins, read-heavy data may be stored in 1NF. Core entities MUST be stored in 2NF and SHOULD be stored in 3NF if feasible.
 
 ## Key Characteristics & Structure
 
