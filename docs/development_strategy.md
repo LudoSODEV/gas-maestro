@@ -27,9 +27,9 @@ gas-maestro/
 │   ├── appsscript.json
 │   └── ...
 └── modules/
-    ├── repository-manager/
+    ├── db-manager/
     │   ├── .clasp.json (Bound to Test Sheet A)
-    │   └── RepositoryManager.gs
+    │   └── DbManager.gs
     └── webapp/
         ├── .clasp.json (Bound to Test Sheet B)
         └── Webapp.gs

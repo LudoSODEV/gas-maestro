@@ -1,6 +1,6 @@
 # System Architecture & Technical Specifications
 
-This document outlines the system design, security model, and implementation guidelines for the **Banque Alimentaire (BA) Data Repository Web Application**.
+This document outlines the system design, security model, and implementation guidelines for the **Banque Alimentaire (BA) Database Web Application**.
 
 ---
 
@@ -8,14 +8,14 @@ This document outlines the system design, security model, and implementation gui
 
 The application is an open-source, lightweight Google Apps Script (GAS) Web App designed to aggregate and structure data across various local branches (Banques Alimentaires / BAs). 
 
-Each local branch operates independently, managing its own regional dataset generated from disparate software sources. The application acts as an interface to process, validate, and append data directly to Google Sheets repositories without relying on a central database management system (DBMS).
+Each local branch operates independently, managing its own regional dataset generated from disparate software sources. The application acts as an interface to process, validate, and append data directly to Google Sheets databases without relying on a central database management system (DBMS).
 
 ---
 
 ## 2. Design Requirements
 
 ### Security & Privacy
-* **Zero-Knowledge Developer Model:** The developer/app owner must **never** automatically receive read or write access to any branch's data repository outside of their own.
+* **Zero-Knowledge Developer Model:** The developer/app owner must **never** automatically receive read or write access to any branch's database outside of their own.
 * **Workspace-Level Authorization:** Access control, identity verification, and permissions are handled natively via Google Workspace domain policies and Google Drive access control lists (ACLs).
 * **Strict Execution Context:** The Web App must deploy under `Execute as: User accessing the web app`.
 * **Isolated User Storage:** User configurations (e.g., target Sheet references) must strictly use `PropertiesService.getUserProperties()`, guaranteeing isolation across accounts.
@@ -50,7 +50,7 @@ To ensure seamless future migration to a full DBMS stack, Maestro maps spreadshe
 | :--- | :--- | :--- |
 | **Frontend UI** | HTML / CSS / JS | Client-side interface served via `HtmlService`. |
 | **Backend API** | Google Apps Script (`.gs`) | Processing layer executing in the context of the logged-in user. |
-| **Local Repositories** | Google Sheets | Tabular storage engines owned and managed by individual BAs. |
+| **Local Databases** | Google Sheets | Tabular storage engines owned and managed by individual BAs. |
 | **State Storage** | `UserProperties` | Serialized JSON storage containing mapping configurations per user. |
 | **Version Control** | GitHub & Google `clasp` | Local development workflow sync and public source transparency. |
 
@@ -66,7 +66,7 @@ graph TD
 
     User([User / Browser]) -->|Accesses Web App| WebApp
     WebApp -->|Executes as Current User<br/>USER_DEPLOYED| UserProps[(User Properties<br/><i>Spreadsheet IDs</i>)]
-    WebApp -->|Reads/Writes Data| Sheets[(Google Sheets<br/><i>Data Repository</i>)]
+    WebApp -->|Reads/Writes Data| Sheets[(Google Sheets<br/><i>Database</i>)]
     WebApp -->|API Requests| AssoConnect[AssoConnect API]
 
     subgraph Google Workspace - User Boundary
@@ -82,7 +82,7 @@ To eliminate name collisions and prevent pollution of the global scope in Google
   ```javascript
   const Maestro = {};
   ```
-- **Scope Restriction**: No other `.gs` file may pollute the global scope. All classes (`Maestro.RepositoryManager`), modules, and methods are attached as properties of the `Maestro` namespace object. Thin global wrapper functions are defined solely in `_Maestro.gs` to expose required GAS entry points (e.g., `doGet`, `getUserRepositories`).
+- **Scope Restriction**: No other `.gs` file may pollute the global scope. All classes (`Maestro.DbManager`), modules, and methods are attached as properties of the `Maestro` namespace object. Thin global wrapper functions are defined solely in `_Maestro.gs` to expose required GAS entry points (e.g., `doGet`, `getUserDbs`).
 
 ---
 
@@ -90,43 +90,43 @@ To eliminate name collisions and prevent pollution of the global scope in Google
 
 ### 4.1 Multi-BA Configuration Schema (`UserProperties`)
 
-Repositories are saved per user as a JSON array string under the property key `MAESTRO_REPOSITORIES`.
+Databases are saved per user as a JSON array string under the property key `MAESTRO_DATABASES`.
 
 ```json
 [
   {
-    "baId": "BA_13",
-    "baName": "Banque Alimentaire 13",
+    "dbKey": "ba13",
+    "dbName": "BA13",
     "spreadsheetId": "1aB2c3D4e5F6g7H8i9J0_example_id_1"
   },
   {
-    "baId": "BA_83",
-    "baName": "Banque Alimentaire 83",
+    "dbKey": "ba83",
+    "dbName": "BA83",
     "spreadsheetId": "9zY8x7W6v5U4t3S2r1Q0_example_id_2"
   }
 ]
 ```
 
-### 4.2 Property Storage Handler (`RepositoryManager.gs`)
+### 4.2 Property Storage Handler (`DbManager.gs`)
 
 ```javascript
-function getUserRepositories() {
+function getUserDbs() {
   const props = PropertiesService.getUserProperties();
-  const rawData = props.getProperty('MAESTRO_REPOSITORIES');
+  const rawData = props.getProperty('MAESTRO_DATABASES');
   return rawData ? JSON.parse(rawData) : [];
 }
 
-function saveRepository(baId, baName, spreadsheetId) {
-  const repos = getUserRepositories();
-  const index = repos.findIndex(r => r.baId === baId);
+function saveDb(dbKey, dbName, spreadsheetId) {
+  const dbs = getUserDbs();
+  const index = dbs.findIndex(d => d.dbKey === dbKey);
   
   if (index > -1) {
-    repos[index] = { baId, baName, spreadsheetId };
+    dbs[index] = { dbKey, dbName, spreadsheetId };
   } else {
-    repos.push({ baId, baName, spreadsheetId });
+    dbs.push({ dbKey, dbName, spreadsheetId });
   }
   
-  PropertiesService.getUserProperties().setProperty('MAESTRO_REPOSITORIES', JSON.stringify(repos));
+  PropertiesService.getUserProperties().setProperty('MAESTRO_DATABASES', JSON.stringify(dbs));
 }
 ```
 
@@ -142,9 +142,9 @@ function processUploadedFile(fileBlob, targetSpreadsheetId) {
     const content = tempFile.getBlob().getDataAsString();
     const parsedData = Utilities.parseCsv(content);
     
-    // 3. Append to repository using executing user's OAuth scope
+    // 3. Append to database using executing user's OAuth scope
     const ss = SpreadsheetApp.openById(targetSpreadsheetId);
-    const sheet = ss.getSheetByName('DataRepository') || ss.getSheets()[0];
+    const sheet = ss.getSheetByName('Database') || ss.getSheets()[0];
     
     sheet.getRange(sheet.getLastRow() + 1, 1, parsedData.length, parsedData[0].length)
          .setValues(parsedData);
@@ -157,7 +157,7 @@ function processUploadedFile(fileBlob, targetSpreadsheetId) {
 }
 ```
 
-### 4.4 Repository Soft Protection (`SheetSetup.gs`)
+### 4.4 Database Soft Protection (`SheetSetup.gs`)
 
 ```javascript
 function applySoftProtections(spreadsheetId) {
@@ -171,19 +171,19 @@ function applySoftProtections(spreadsheetId) {
 }
 ```
 
-### 4.5 Repository Creation & Automatic Discovery (`RepositoryDiscovery.gs`)
+### 4.5 Database Creation & Automatic Discovery (`DbDiscovery.gs`)
 
 ```javascript
-function createAndTagRepository(baId, baName) {
-  const ss = SpreadsheetApp.create(`BA Repository - ${baName} (${baId})`);
+function createAndTagDb(dbKey, dbName) {
+  const ss = SpreadsheetApp.create(`Database - ${dbName} (${dbKey})`);
   const spreadsheetId = ss.getId();
   
   // Tag the spreadsheet file with a custom Drive property so it can be automatically discovered
   // Note: Because there is no centralized authority that manages databases and each user is fully
-  // in control of their data, there is no guarantee of uniqueness for MAESTRO_REPOSITORY_KEY.
+  // in control of their data, there is no guarantee of uniqueness for MAESTRO_DATABASE_KEY.
   Drive.Properties.insert({
-    key: 'MAESTRO_REPOSITORY_KEY',
-    value: baId,
+    key: 'MAESTRO_DATABASE_KEY',
+    value: dbKey,
     visibility: 'PUBLIC'
   }, spreadsheetId);
   
@@ -191,9 +191,9 @@ function createAndTagRepository(baId, baName) {
   return spreadsheetId;
 }
 
-function discoverUserRepositories() {
-  // Search for files tagged with the BA repository property that the user has access to
-  const query = "properties has { key='MAESTRO_REPOSITORY_KEY' and visibility='PUBLIC' } and trashed = false";
+function discoverUserDbs() {
+  // Search for files tagged with the database property that the user has access to
+  const query = "properties has { key='MAESTRO_DATABASE_KEY' and visibility='PUBLIC' } and trashed = false";
   const files = Drive.Files.list({ q: query });
   
   return files.items.map(item => ({

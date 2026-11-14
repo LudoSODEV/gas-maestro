@@ -17,28 +17,28 @@ A DB file in **Maestro** is a dedicated Google Sheet acting as the primary local
 
 ### 1. Identification & Relationship
 - **Document Reference**: Identified and referred to by its Google Sheet document ID.
-- **BA Association**: The DB is related to a BA via `baId`. The `baId` usually matches `/^ba\d{3}$/`, although exceptions may exist.
-- **Naming Convention**: `BA DB - [BA_NAME] ([BA_ID])` (e.g., `BA DB - BA13 (ba13)`).
+- **Database Association**: The DB is related via `dbKey`. The `dbKey` usually matches `/^ba\d{3}$/`, although exceptions may exist.
+- **Naming Convention**: `Database - [DB_NAME] ([DB_KEY])` (e.g., `Database - BA13 (ba13)`).
 - **Drive File Properties**: Tagged with a custom public Drive property:
-  - Key: `MAESTRO_REPOSITORY_KEY`
-  - Value: The normalized BA identifier (e.g., `ba13`, `ba83`).
+  - Key: `MAESTRO_DATABASE_KEY`
+  - Value: The normalized database identifier (e.g., `ba13`, `ba83`).
   - **Uniqueness Note**: Because there is no centralized authority that manages databases and each user is fully in control of their data, there is no guarantee of uniqueness for this key value.
 
 ### 2. Sheet Structure & Initial State
 - **Empty DB State**: An empty DB consists of a single sheet named `Parameters`.
-- **Parameters Sheet**: Features two columns serving to store key/value pairs. By default, key/value pairs for `baId` and `baName` are set at creation time.
+- **Parameters Sheet**: Features two columns serving to store key/value pairs. By default, key/value pairs for `dbKey` and `dbName` are set at creation time.
 
 ### 3. Permissions & Security Model
 - **Ownership & Access**: Created and owned by/accessible to the branch user within their Google Workspace boundary. The developer/app author has zero access.
 - **Soft Protections**: All sheets within the DB have warning-only protections applied programmatically (`protection.setWarningOnly(true)`) to prevent accidental structural edits by users while permitting script-driven data appends and manual inspection.
 
 ### 4. Configuration & Persistence
-- **State Storage**: Stored in Google Apps Script `UserProperties` under the key `MAESTRO_REPOSITORIES` as a serialized JSON array of DB mappings:
+- **State Storage**: Stored in Google Apps Script `UserProperties` under the key `MAESTRO_DATABASES` as a serialized JSON array of DB mappings:
   ```json
   [
     {
-      "baId": "ba13",
-      "baName": "BA13",
+      "dbKey": "ba13",
+      "dbName": "BA13",
       "spreadsheetId": "1aB2c3D4e5F6g7H8i9J0_example_id"
     }
   ]

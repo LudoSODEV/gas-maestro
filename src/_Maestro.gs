@@ -17,14 +17,14 @@ function doGet (e)
 	return Maestro.Webapp.doGet(e);
 }
 
-function Maestro_getUserRepositories ()
+function Maestro_getUserDbs ()
 {
-	return Maestro.Webapp.getUserRepositories();
+	return Maestro.Webapp.getUserDbs();
 }
 
-function Maestro_saveUserRepositories (repos)
+function Maestro_saveUserDbs (dbs)
 {
-	return Maestro.Webapp.saveUserRepositories(repos);
+	return Maestro.Webapp.saveUserDbs(dbs);
 }
 
 function Maestro_getCurrentUserEmail ()
@@ -32,7 +32,7 @@ function Maestro_getCurrentUserEmail ()
 	return Maestro.Webapp.getCurrentUserEmail();
 }
 
-function Maestro_getOrCreateAutoRepository ()
+function Maestro_getOrCreateAutoDb ()
 {
-	return Maestro.Webapp.getOrCreateAutoRepository();
+	return Maestro.Webapp.getOrCreateAutoDb();
 }

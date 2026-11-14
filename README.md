@@ -20,7 +20,7 @@ graph TD
     User([User]) -->|Can only read| SourceCode
     User -->|Accesses Web App <br/> Executes as Current User| WebApp(WebApp)
     SourceCode -->|Deployment| WebApp
-    WebApp -->|Reads/Writes Data| Sheets[(Google Sheets<br/><i>Data Repository</i>)]
+    WebApp -->|Reads/Writes Data| Sheets[(Google Sheets<br/><i>Database</i>)]
     WebApp -->|Accesses Properties| UserProps[(User Properties<br/><i>Spreadsheet IDs</i>)]
     
     subgraph UserBoundary [Google Workspace - User Boundary]

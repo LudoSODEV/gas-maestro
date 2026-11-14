@@ -1,24 +1,24 @@
 /**
- * RepositoryManager class
- * Handles creation and management of BA repository Google Sheets.
+ * DbManager class
+ * Handles creation and management of Database Google Sheets.
  */
-Maestro.RepositoryManager = class RepositoryManager
+Maestro.DbManager = class DbManager
 {
-	static createRepository (baId, baName)
+	static createDb (dbKey, dbName)
 	{
-		const normalizedBaId = baId.toLowerCase();
-		const resolvedBaName = baName ? baName.toUpperCase() : normalizedBaId.toUpperCase();
+		const normalizedDbKey = dbKey.toLowerCase();
+		const resolvedDbName = dbName ? dbName.toUpperCase() : normalizedDbKey.toUpperCase();
 		
-		const ss = SpreadsheetApp.create('BA Repository - ' + resolvedBaName + ' (' + normalizedBaId + ')');
+		const ss = SpreadsheetApp.create('Database - ' + resolvedDbName + ' (' + normalizedDbKey + ')');
 		const spreadsheetId = ss.getId();
 		
-		// Tag file with MAESTRO_REPOSITORY_KEY property
+		// Tag file with MAESTRO_DATABASE_KEY property
 		try
 		{
 			Drive.Properties.insert
 			({
-				key: 'MAESTRO_REPOSITORY_KEY',
-				value: normalizedBaId,
+				key: 'MAESTRO_DATABASE_KEY',
+				value: normalizedDbKey,
 				visibility: 'PUBLIC'
 			}, spreadsheetId);
 		}
@@ -27,7 +27,7 @@ Maestro.RepositoryManager = class RepositoryManager
 			try
 			{
 				const file = DriveApp.getFileById(spreadsheetId);
-				file.setDescription('MAESTRO_REPOSITORY_KEY: ' + normalizedBaId);
+				file.setDescription('MAESTRO_DATABASE_KEY: ' + normalizedDbKey);
 			}
 			catch (err)
 			{
@@ -51,8 +51,8 @@ Maestro.RepositoryManager = class RepositoryManager
 		
 		parametersSheet.clear();
 		parametersSheet.appendRow(['Key', 'Value']);
-		parametersSheet.appendRow(['baId', normalizedBaId]);
-		parametersSheet.appendRow(['baName', resolvedBaName]);
+		parametersSheet.appendRow(['dbKey', normalizedDbKey]);
+		parametersSheet.appendRow(['dbName', resolvedDbName]);
 		
 		// Format Parameters sheet header
 		const headerRange = parametersSheet.getRange(1, 1, 1, 2);
@@ -67,27 +67,27 @@ Maestro.RepositoryManager = class RepositoryManager
 		});
 		
 		return {
-			baId: normalizedBaId,
-			baName: resolvedBaName,
+			dbKey: normalizedDbKey,
+			dbName: resolvedDbName,
 			spreadsheetId: spreadsheetId
 		};
 	}
 
-	static findRepositoryByBaId (baId)
+	static findDbByKey (dbKey)
 	{
-		const normalizedBaId = baId.toLowerCase();
+		const normalizedDbKey = dbKey.toLowerCase();
 		
 		try
 		{
-			const query = 'properties has { key=\'MAESTRO_REPOSITORY_KEY\' and value=\'' + normalizedBaId + '\' and visibility=\'PUBLIC\' } and trashed = false';
+			const query = 'properties has { key=\'MAESTRO_DATABASE_KEY\' and value=\'' + normalizedDbKey + '\' and visibility=\'PUBLIC\' } and trashed = false';
 			const result = Drive.Files.list({ q: query });
 			
 			if (result && result.items && result.items.length > 0)
 			{
 				const fileItem = result.items[0];
 				return {
-					baId: normalizedBaId,
-					baName: normalizedBaId.toUpperCase(),
+					dbKey: normalizedDbKey,
+					dbName: normalizedDbKey.toUpperCase(),
 					spreadsheetId: fileItem.id
 				};
 			}
@@ -100,11 +100,11 @@ Maestro.RepositoryManager = class RepositoryManager
 				while (files.hasNext())
 				{
 					const file = files.next();
-					if (file.getName().toLowerCase().includes(normalizedBaId) || file.getDescription().includes(normalizedBaId))
+					if (file.getName().toLowerCase().includes(normalizedDbKey) || file.getDescription().includes(normalizedDbKey))
 					{
 						return {
-							baId: normalizedBaId,
-							baName: normalizedBaId.toUpperCase(),
+							dbKey: normalizedDbKey,
+							dbName: normalizedDbKey.toUpperCase(),
 							spreadsheetId: file.getId()
 						};
 					}
@@ -119,15 +119,15 @@ Maestro.RepositoryManager = class RepositoryManager
 		return null;
 	}
 
-	static getOrCreateRepositoryForBa (baId, baName)
+	static getOrCreateDb (dbKey, dbName)
 	{
-		let repo = Maestro.RepositoryManager.findRepositoryByBaId(baId);
+		let db = Maestro.DbManager.findDbByKey(dbKey);
 		
-		if (!repo)
+		if (!db)
 		{
-			repo = Maestro.RepositoryManager.createRepository(baId, baName);
+			db = Maestro.DbManager.createDb(dbKey, dbName);
 		}
 		
-		return repo;
+		return db;
 	}
 };

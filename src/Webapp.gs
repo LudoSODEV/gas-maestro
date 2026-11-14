@@ -1,6 +1,6 @@
 /**
  * Webapp module
- * Handles web app routing, user properties management, and repository automation.
+ * Handles web app routing, user properties management, and database automation.
  */
 Maestro.Webapp = {
 	doGet (e)
@@ -10,10 +10,10 @@ Maestro.Webapp = {
 			.setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 	},
 
-	getUserRepositories ()
+	getUserDbs ()
 	{
 		const props = PropertiesService.getUserProperties();
-		const rawData = props.getProperty('MAESTRO_REPOSITORIES');
+		const rawData = props.getProperty('MAESTRO_DATABASES');
 		
 		if (rawData)
 		{
@@ -23,10 +23,10 @@ Maestro.Webapp = {
 		return [];
 	},
 
-	saveUserRepositories (repos)
+	saveUserDbs (dbs)
 	{
 		const props = PropertiesService.getUserProperties();
-		props.setProperty('MAESTRO_REPOSITORIES', JSON.stringify(repos));
+		props.setProperty('MAESTRO_DATABASES', JSON.stringify(dbs));
 		return { success: true };
 	},
 
@@ -35,44 +35,44 @@ Maestro.Webapp = {
 		return Session.getActiveUser().getEmail() || 'Unknown user';
 	},
 
-	getOrCreateAutoRepository ()
+	getOrCreateAutoDb ()
 	{
 		const email = Session.getActiveUser().getEmail() || '';
 		const match = email.match (/^(ba[0-9]+)\./i);
 		
 		if (!match)
 		{
-			throw new Error('User email not recognized for automatic repository generation (expected format: baXX.*)');
+			throw new Error('User email not recognized for automatic database generation (expected format: baXX.*)');
 		}
 		
-		const baId = match[1].toLowerCase();
-		const baName = baId.toUpperCase();
+		const dbKey = match[1].toLowerCase();
+		const dbName = dbKey.toUpperCase();
 		
-		const repos = Maestro.Webapp.getUserRepositories();
-		let repo = repos.find(r => r.baId === baId);
+		const dbs = Maestro.Webapp.getUserDbs();
+		let db = dbs.find(d => d.dbKey === dbKey);
 		
-		if (repo)
+		if (db)
 		{
-			return repo;
+			return db;
 		}
 		
-		// Search Google Drive for existing repository with matching MAESTRO_REPOSITORY_KEY property
+		// Search Google Drive for existing database with matching MAESTRO_DATABASE_KEY property
 		try
 		{
-			const query = 'properties has { key=\'MAESTRO_REPOSITORY_KEY\' and value=\'' + baId + '\' and visibility=\'PUBLIC\' } and trashed = false';
+			const query = 'properties has { key=\'MAESTRO_DATABASE_KEY\' and value=\'' + dbKey + '\' and visibility=\'PUBLIC\' } and trashed = false';
 			const result = Drive.Files.list({ q: query });
 			
 			if (result && result.items && result.items.length > 0)
 			{
 				const fileItem = result.items[0];
-				repo = {
-					baId: baId,
-					baName: baName,
+				db = {
+					dbKey: dbKey,
+					dbName: dbName,
 					spreadsheetId: fileItem.id
 				};
-				repos.push(repo);
-				Maestro.Webapp.saveUserRepositories(repos);
-				return repo;
+				dbs.push(db);
+				Maestro.Webapp.saveUserDbs(dbs);
+				return db;
 			}
 		}
 		catch (e)
@@ -83,16 +83,16 @@ Maestro.Webapp = {
 				while (files.hasNext())
 				{
 					const file = files.next();
-					if (file.getName().toLowerCase().includes(baId) || file.getDescription().includes(baId))
+					if (file.getName().toLowerCase().includes(dbKey) || file.getDescription().includes(dbKey))
 					{
-						repo = {
-							baId: baId,
-							baName: baName,
+						db = {
+							dbKey: dbKey,
+							dbName: dbName,
 							spreadsheetId: file.getId()
 						};
-						repos.push(repo);
-						Maestro.Webapp.saveUserRepositories(repos);
-						return repo;
+						dbs.push(db);
+						Maestro.Webapp.saveUserDbs(dbs);
+						return db;
 					}
 				}
 			}
@@ -102,13 +102,13 @@ Maestro.Webapp = {
 			}
 		}
 		
-		repo = Maestro.RepositoryManager.getOrCreateRepositoryForBa(baId, baName);
-		if (!repos.some(r => r.baId === baId))
+		db = Maestro.DbManager.getOrCreateDb(dbKey, dbName);
+		if (!dbs.some(d => d.dbKey === dbKey))
 		{
-			repos.push(repo);
-			Maestro.Webapp.saveUserRepositories(repos);
+			dbs.push(db);
+			Maestro.Webapp.saveUserDbs(dbs);
 		}
 		
-		return repo;
+		return db;
 	}
 };
