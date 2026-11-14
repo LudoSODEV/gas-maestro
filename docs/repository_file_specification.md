@@ -20,8 +20,9 @@ A DB file in **Maestro** is a dedicated Google Sheet acting as the primary local
 - **BA Association**: The DB is related to a BA via `baId`. The `baId` usually matches `/^ba\d{3}$/`, although exceptions may exist.
 - **Naming Convention**: `BA DB - [BA_NAME] ([BA_ID])` (e.g., `BA DB - BA13 (ba13)`).
 - **Drive File Properties**: Tagged with a custom public Drive property:
-  - Key: `MAESTRO_REPOSITORY_ID`
+  - Key: `MAESTRO_REPOSITORY_KEY`
   - Value: The normalized BA identifier (e.g., `ba13`, `ba83`).
+  - **Uniqueness Note**: Because there is no centralized authority that manages databases and each user is fully in control of their data, there is no guarantee of uniqueness for this key value.
 
 ### 2. Sheet Structure & Initial State
 - **Empty DB State**: An empty DB consists of a single sheet named `Parameters`.

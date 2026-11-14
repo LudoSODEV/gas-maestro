@@ -179,8 +179,10 @@ function createAndTagRepository(baId, baName) {
   const spreadsheetId = ss.getId();
   
   // Tag the spreadsheet file with a custom Drive property so it can be automatically discovered
+  // Note: Because there is no centralized authority that manages databases and each user is fully
+  // in control of their data, there is no guarantee of uniqueness for MAESTRO_REPOSITORY_KEY.
   Drive.Properties.insert({
-    key: 'MAESTRO_REPOSITORY_ID',
+    key: 'MAESTRO_REPOSITORY_KEY',
     value: baId,
     visibility: 'PUBLIC'
   }, spreadsheetId);
@@ -191,7 +193,7 @@ function createAndTagRepository(baId, baName) {
 
 function discoverUserRepositories() {
   // Search for files tagged with the BA repository property that the user has access to
-  const query = "properties has { key='MAESTRO_REPOSITORY_ID' and visibility='PUBLIC' } and trashed = false";
+  const query = "properties has { key='MAESTRO_REPOSITORY_KEY' and visibility='PUBLIC' } and trashed = false";
   const files = Drive.Files.list({ q: query });
   
   return files.items.map(item => ({

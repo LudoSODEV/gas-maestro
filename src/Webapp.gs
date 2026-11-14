@@ -56,10 +56,10 @@ Maestro.Webapp = {
 			return repo;
 		}
 		
-		// Search Google Drive for existing repository with matching MAESTRO_REPOSITORY_ID property
+		// Search Google Drive for existing repository with matching MAESTRO_REPOSITORY_KEY property
 		try
 		{
-			const query = 'properties has { key=\'MAESTRO_REPOSITORY_ID\' and value=\'' + baId + '\' and visibility=\'PUBLIC\' } and trashed = false';
+			const query = 'properties has { key=\'MAESTRO_REPOSITORY_KEY\' and value=\'' + baId + '\' and visibility=\'PUBLIC\' } and trashed = false';
 			const result = Drive.Files.list({ q: query });
 			
 			if (result && result.items && result.items.length > 0)
