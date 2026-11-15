@@ -5,7 +5,7 @@
 Maestro.Webapp = {
 	doGet (e)
 	{
-		return HtmlService.createHtmlOutputFromFile('Index')
+		return HtmlService.createHtmlOutputFromFile('index')
 			.setTitle('Maestro - Configuration')
 			.setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 	},

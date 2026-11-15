@@ -78,11 +78,11 @@ graph TD
 ### 3.3 Namespacing & Global Scope
 To eliminate name collisions and prevent pollution of the global scope in Google Apps Script:
 - **Alphabetical Evaluation Order**: Google Apps Script compiles and executes `.gs` files in alphabetical order.
-- **Root Namespace (`_Maestro.gs`)**: The alphabetically first file (`_Maestro.gs`) initializes the single global symbol:
+- **Root Namespace (`_maestro.gs`)**: The alphabetically first file (`_maestro.gs`) initializes the single global symbol:
   ```javascript
   const Maestro = {};
   ```
-- **Scope Restriction**: No other `.gs` file may pollute the global scope. All classes (`Maestro.DbManager`), modules, and methods are attached as properties of the `Maestro` namespace object. Thin global wrapper functions are defined solely in `_Maestro.gs` to expose required GAS entry points (e.g., `doGet`, `getUserDbs`).
+- **Scope Restriction**: No other `.gs` file may pollute the global scope. All classes (`Maestro.DbManager`), modules, and methods are attached as properties of the `Maestro` namespace object. Thin global wrapper functions are defined solely in `_maestro.gs` to expose required GAS entry points (e.g., `doGet`, `getUserDbs`).
 
 ---
 
@@ -107,7 +107,7 @@ Databases are saved per user as a JSON array string under the property key `MAES
 ]
 ```
 
-### 4.2 Property Storage Handler (`DbManager.gs`)
+### 4.2 Property Storage Handler (`db-manager.gs`)
 
 ```javascript
 function getUserDbs() {

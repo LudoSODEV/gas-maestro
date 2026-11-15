@@ -14,7 +14,7 @@ The architecture bridges modern Single Page Application (SPA) development with t
 
 Google Apps Script web applications rely on standard entry points like `doGet(e)` and `doPost(e)` to handle HTTP traffic. In `gas-maestro`, the backend must distinguish between browser-based UI requests and programmatic API calls.
 
-### 2.1 Request Routing Strategy in `Webapp.gs`
+### 2.1 Request Routing Strategy in `webapp.gs`
 
 ```javascript
 Maestro.Webapp = {
@@ -27,7 +27,7 @@ Maestro.Webapp = {
     }
 
     // Default: Serve Vue 3 Web App Presentation Layer
-    const template = HtmlService.createTemplateFromFile('Index');
+    const template = HtmlService.createTemplateFromFile('index');
     
     template.initialParams = JSON.stringify(params);
     template.deploymentUrl = ScriptApp.getService().getUrl();
@@ -50,7 +50,7 @@ Maestro.Webapp = {
 
 ## 3. Frontend Build & Bundling Setup
 
-To avoid multi-file asset loading overhead and CORS limitations inside GAS `iframe` sandboxes, all Vue components, styles, and assets are bundled into a single standalone HTML file (`Index.html`) at build time.
+To avoid multi-file asset loading overhead and CORS limitations inside GAS `iframe` sandboxes, all Vue components, styles, and assets are bundled into a single standalone HTML file (`index.html`) at build time.
 
 ### 3.1 Project Layout
 
@@ -64,10 +64,10 @@ gas-maestro/
 │   │   └── components/     # Feature components (Databases, Tools, etc.)
 │   └── package.json        # Frontend dependencies (Vue 3, Vite)
 ├── src/                    # GAS Backend & Bundled Output
-│   ├── _Maestro.gs         # Root namespace
-│   ├── Webapp.gs           # Request dispatcher (doGet / API)
-│   ├── DbManager.gs        # Backend data logic
-│   └── Index.html          # Bundled Vue SPA output
+│   ├── _maestro.gs         # Root namespace
+│   ├── webapp.gs           # Request dispatcher (doGet / API)
+│   ├── db-manager.gs       # Backend data logic
+│   └── index.html          # Bundled Vue SPA output
 └── package.json            # Root build & clasp scripts
 ```
 
@@ -95,7 +95,7 @@ export default defineConfig({
 
 Standard HTML5 `history.pushState` fails to update the top-level browser address bar when executed within a GAS `<iframe>`. Furthermore, relative URLs resolve incorrectly to `script.googleusercontent.com`.
 
-### 4.1 Server-Side Injection (`Index.html` template variables)
+### 4.1 Server-Side Injection (`index.html` template variables)
 
 ```html
 <!DOCTYPE html>
@@ -132,7 +132,7 @@ Standard HTML5 `history.pushState` fails to update the top-level browser address
    ```bash
    npm run build:frontend
    ```
-   *(Builds Vue 3, inlines assets via `vite-plugin-singlefile`, and copies output to `src/Index.html`)*
+   *(Builds Vue 3, inlines assets via `vite-plugin-singlefile`, and copies output to `src/index.html`)*
 3. **Deploy via Clasp**:
    ```bash
    npm run push

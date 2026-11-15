@@ -23,16 +23,16 @@ gas-maestro/
 ├── .clasp.json (Master / Rollup project)
 ├── package.json
 ├── src/ (Unified Maestro application bundle)
-│   ├── _Maestro.gs
+│   ├── _maestro.gs
 │   ├── appsscript.json
 │   └── ...
 └── modules/
     ├── db-manager/
     │   ├── .clasp.json (Bound to Test Sheet A)
-    │   └── DbManager.gs
+    │   └── db-manager.gs
     └── webapp/
         ├── .clasp.json (Bound to Test Sheet B)
-        └── Webapp.gs
+        └── webapp.gs
 ```
 
 - **Independent Clasp IDs**: Each subdirectory under `modules/` possesses its own `.clasp.json` referencing a standalone Google Apps Script project.
@@ -52,5 +52,5 @@ gas-maestro/
 
 To produce the final **Maestro** application:
 - **Concatenation & Namespace Organization**: All module source files are aggregated into the central application directory (`src/` or `dist/`).
-- **Alphabetical Execution Order Compliance**: GAS executes `.gs` files alphabetically. The entry point (`_Maestro.gs`) initializes the global `Maestro` namespace object (`const Maestro = {};`), followed by modules attached as properties.
+- **Alphabetical Execution Order Compliance**: GAS executes `.gs` files alphabetically. The entry point (`_maestro.gs`) initializes the global `Maestro` namespace object (`const Maestro = {};`), followed by modules attached as properties.
 - **Single Deployment**: The unified bundle is deployed via the master `.clasp.json` configuration as the production-ready Maestro web application.
