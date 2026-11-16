@@ -5,8 +5,14 @@
 Maestro.Webapp = {
 	doGet (e)
 	{
-		return HtmlService.createHtmlOutputFromFile('index')
-			.setTitle('Maestro - Configuration')
+		const params = e && e.parameter ? e.parameter : {};
+		const template = HtmlService.createTemplateFromFile('index');
+		
+		template.initialParams = JSON.stringify(params);
+		template.deploymentUrl = ScriptApp.getService().getUrl();
+		
+		return template.evaluate()
+			.setTitle('Maestro - Centre de Contrôle')
 			.setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 	},
 

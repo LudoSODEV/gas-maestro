@@ -9,7 +9,7 @@ Maestro.DbManager = class DbManager
 		const normalizedDbKey = dbKey.toLowerCase();
 		const resolvedDbName = dbName ? dbName.toUpperCase() : normalizedDbKey.toUpperCase();
 		
-		const ss = SpreadsheetApp.create('Database - ' + resolvedDbName + ' (' + normalizedDbKey + ')');
+		const ss = SpreadsheetApp.create('Maestro DB ' + normalizedDbKey);
 		const spreadsheetId = ss.getId();
 		
 		// Tag file with MAESTRO_DATABASE_KEY property

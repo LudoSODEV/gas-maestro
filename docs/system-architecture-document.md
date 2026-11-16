@@ -175,7 +175,7 @@ function applySoftProtections(spreadsheetId) {
 
 ```javascript
 function createAndTagDb(dbKey, dbName) {
-  const ss = SpreadsheetApp.create(`Database - ${dbName} (${dbKey})`);
+  const ss = SpreadsheetApp.create(`Maestro DB ${dbKey}`);
   const spreadsheetId = ss.getId();
   
   // Tag the spreadsheet file with a custom Drive property so it can be automatically discovered
