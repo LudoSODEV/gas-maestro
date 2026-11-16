@@ -32,6 +32,11 @@ function Maestro_getCurrentUserEmail ()
 	return Maestro.Webapp.getCurrentUserEmail();
 }
 
+function Maestro_listAccessibleDbs ()
+{
+	return Maestro.Webapp.listAccessibleDbs();
+}
+
 function Maestro_getOrCreateAutoDb ()
 {
 	return Maestro.Webapp.getOrCreateAutoDb();

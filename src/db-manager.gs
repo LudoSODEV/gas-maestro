@@ -4,36 +4,20 @@
  */
 Maestro.DbManager = class DbManager
 {
-	static createDb (dbKey, dbName)
+	static createDb (dbKey)
 	{
 		const normalizedDbKey = dbKey.toLowerCase();
-		const resolvedDbName = dbName ? dbName.toUpperCase() : normalizedDbKey.toUpperCase();
 		
 		const ss = SpreadsheetApp.create('Maestro DB ' + normalizedDbKey);
 		const spreadsheetId = ss.getId();
 		
-		// Tag file with MAESTRO_DATABASE_KEY property
-		try
-		{
-			Drive.Properties.insert
-			({
-				key: 'MAESTRO_DATABASE_KEY',
-				value: normalizedDbKey,
-				visibility: 'PUBLIC'
-			}, spreadsheetId);
-		}
-		catch (e)
-		{
-			try
-			{
-				const file = DriveApp.getFileById(spreadsheetId);
-				file.setDescription('MAESTRO_DATABASE_KEY: ' + normalizedDbKey);
-			}
-			catch (err)
-			{
-				// Ignore fallback description failure
-			}
-		}
+		// Tag file with MAESTRO_DATABASE_KEY custom property (strict, no fallback)
+		Drive.Properties.insert
+		({
+			key: 'MAESTRO_DATABASE_KEY',
+			value: normalizedDbKey,
+			visibility: 'PUBLIC'
+		}, spreadsheetId);
 		
 		// Initialize Parameters sheet
 		const sheets = ss.getSheets();
@@ -52,7 +36,6 @@ Maestro.DbManager = class DbManager
 		parametersSheet.clear();
 		parametersSheet.appendRow(['Key', 'Value']);
 		parametersSheet.appendRow(['dbKey', normalizedDbKey]);
-		parametersSheet.appendRow(['dbName', resolvedDbName]);
 		
 		// Format Parameters sheet header
 		const headerRange = parametersSheet.getRange(1, 1, 1, 2);
@@ -68,7 +51,6 @@ Maestro.DbManager = class DbManager
 		
 		return {
 			dbKey: normalizedDbKey,
-			dbName: resolvedDbName,
 			spreadsheetId: spreadsheetId
 		};
 	}
@@ -76,56 +58,55 @@ Maestro.DbManager = class DbManager
 	static findDbByKey (dbKey)
 	{
 		const normalizedDbKey = dbKey.toLowerCase();
+		const query = 'properties has { key=\'MAESTRO_DATABASE_KEY\' and value=\'' + normalizedDbKey + '\' and visibility=\'PUBLIC\' } and trashed = false';
+		const result = Drive.Files.list({ q: query });
 		
-		try
+		if (result && result.items && result.items.length > 0)
 		{
-			const query = 'properties has { key=\'MAESTRO_DATABASE_KEY\' and value=\'' + normalizedDbKey + '\' and visibility=\'PUBLIC\' } and trashed = false';
-			const result = Drive.Files.list({ q: query });
-			
-			if (result && result.items && result.items.length > 0)
-			{
-				const fileItem = result.items[0];
-				return {
-					dbKey: normalizedDbKey,
-					dbName: normalizedDbKey.toUpperCase(),
-					spreadsheetId: fileItem.id
-				};
-			}
-		}
-		catch (e)
-		{
-			try
-			{
-				const files = DriveApp.searchFiles('trashed = false');
-				while (files.hasNext())
-				{
-					const file = files.next();
-					if (file.getName().toLowerCase().includes(normalizedDbKey) || file.getDescription().includes(normalizedDbKey))
-					{
-						return {
-							dbKey: normalizedDbKey,
-							dbName: normalizedDbKey.toUpperCase(),
-							spreadsheetId: file.getId()
-						};
-					}
-				}
-			}
-			catch (err)
-			{
-				// Ignore search fallback failure
-			}
+			const fileItem = result.items[0];
+			return {
+				dbKey: normalizedDbKey,
+				spreadsheetId: fileItem.id
+			};
 		}
 		
 		return null;
 	}
 
-	static getOrCreateDb (dbKey, dbName)
+	static listAccessibleDbs ()
+	{
+		const query = 'properties has { key=\'MAESTRO_DATABASE_KEY\' and visibility=\'PUBLIC\' } and trashed = false';
+		const result = Drive.Files.list({ q: query });
+		const dbs = [];
+		
+		if (result && result.items)
+		{
+			result.items.forEach(item =>
+			{
+				if (item.properties)
+				{
+					const prop = item.properties.find(p => p.key === 'MAESTRO_DATABASE_KEY' && p.visibility === 'PUBLIC');
+					if (prop && prop.value)
+					{
+						dbs.push({
+							dbKey: prop.value.toLowerCase(),
+							spreadsheetId: item.id
+						});
+					}
+				}
+			});
+		}
+		
+		return dbs;
+	}
+
+	static getOrCreateDb (dbKey)
 	{
 		let db = Maestro.DbManager.findDbByKey(dbKey);
 		
 		if (!db)
 		{
-			db = Maestro.DbManager.createDb(dbKey, dbName);
+			db = Maestro.DbManager.createDb(dbKey);
 		}
 		
 		return db;

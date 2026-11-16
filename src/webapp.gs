@@ -41,6 +41,11 @@ Maestro.Webapp = {
 		return Session.getActiveUser().getEmail() || 'Unknown user';
 	},
 
+	listAccessibleDbs ()
+	{
+		return Maestro.DbManager.listAccessibleDbs();
+	},
+
 	getOrCreateAutoDb ()
 	{
 		const email = Session.getActiveUser().getEmail() || '';
@@ -52,7 +57,6 @@ Maestro.Webapp = {
 		}
 		
 		const dbKey = match[1].toLowerCase();
-		const dbName = dbKey.toUpperCase();
 		
 		const dbs = Maestro.Webapp.getUserDbs();
 		let db = dbs.find(d => d.dbKey === dbKey);
@@ -62,53 +66,19 @@ Maestro.Webapp = {
 			return db;
 		}
 		
-		// Search Google Drive for existing database with matching MAESTRO_DATABASE_KEY property
-		try
+		// Search Google Drive for existing database using custom property exclusively (no fallback)
+		db = Maestro.DbManager.findDbByKey(dbKey);
+		if (db)
 		{
-			const query = 'properties has { key=\'MAESTRO_DATABASE_KEY\' and value=\'' + dbKey + '\' and visibility=\'PUBLIC\' } and trashed = false';
-			const result = Drive.Files.list({ q: query });
-			
-			if (result && result.items && result.items.length > 0)
+			if (!dbs.some(d => d.dbKey === dbKey))
 			{
-				const fileItem = result.items[0];
-				db = {
-					dbKey: dbKey,
-					dbName: dbName,
-					spreadsheetId: fileItem.id
-				};
 				dbs.push(db);
 				Maestro.Webapp.saveUserDbs(dbs);
-				return db;
 			}
-		}
-		catch (e)
-		{
-			try
-			{
-				const files = DriveApp.searchFiles('trashed = false');
-				while (files.hasNext())
-				{
-					const file = files.next();
-					if (file.getName().toLowerCase().includes(dbKey) || file.getDescription().includes(dbKey))
-					{
-						db = {
-							dbKey: dbKey,
-							dbName: dbName,
-							spreadsheetId: file.getId()
-						};
-						dbs.push(db);
-						Maestro.Webapp.saveUserDbs(dbs);
-						return db;
-					}
-				}
-			}
-			catch (err)
-			{
-				// Ignore search fallback failure and proceed to creation
-			}
+			return db;
 		}
 		
-		db = Maestro.DbManager.getOrCreateDb(dbKey, dbName);
+		db = Maestro.DbManager.createDb(dbKey);
 		if (!dbs.some(d => d.dbKey === dbKey))
 		{
 			dbs.push(db);
