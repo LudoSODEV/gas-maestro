@@ -1,44 +1,141 @@
 <template>
-	<div class="app-container">
-		<header class="app-header">
-			<div class="header-titles">
-				<h1>Maestro - Centre de Contrôle</h1>
-				<p class="subtitle">Banque Alimentaire - Application de gestion et synchronisation</p>
-			</div>
-			<div class="header-indicators">
-				<div class="indicator-item">
-					<span>Utilisateur connecté:</span>
-					<strong>{{ currentUserEmail }}</strong>
-				</div>
-				<div class="indicator-item">
-					<span>Base de données active:</span>
-					<strong>{{ activeDatabaseIndicator }}</strong>
-				</div>
-			</div>
-		</header>
+	<div v-cloak class="min-h-screen flex flex-col md:flex-row">
 
-		<div class="main-layout">
-			<nav class="sidebar">
-				<div v-for="section in sections" :key="section.id" class="nav-section">
-					<h3 class="section-title">{{ section.name }}</h3>
-					<ul class="tool-list">
-						<li v-for="tool in section.tools" :key="tool.id">
-							<a
-								:href="getToolUrl(section.id, tool.id)"
-								@click.prevent="selectTool(section.id, tool.id)"
-								:class="{ active: currentSection === section.id && currentTool === tool.id }"
-							>
-								{{ tool.name }}
-							</a>
-						</li>
-					</ul>
-				</div>
-			</nav>
+		<!-- MOBILE DRAWER BACKDROP -->
+		<transition name="fade">
+			<div v-if="isMobileMenuOpen" 
+				 @click="isMobileMenuOpen = false"
+				 class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-40 md:hidden">
+			</div>
+		</transition>
 
-			<main class="content-area">
+		<!-- SIDEBAR NAVIGATION -->
+		<aside :class="[
+				   'fixed inset-y-0 left-0 z-50 w-72 bg-slate-900 text-slate-200 flex flex-col transition-transform duration-200 ease-in-out md:translate-x-0 md:static md:shrink-0',
+				   isMobileMenuOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'
+			   ]">
+			<!-- Brand Logo Area -->
+			<div class="h-16 flex items-center justify-between px-6 border-b border-slate-800 bg-slate-950/40">
+				<div class="flex items-center gap-3">
+					<div class="w-9 h-9 rounded-lg bg-gradient-to-br from-blue-500 to-emerald-500 flex items-center justify-center text-white font-bold shadow-sm">
+						M
+					</div>
+					<div>
+						<span class="text-white font-bold text-lg tracking-tight block leading-none">Maestro</span>
+						<span class="text-[11px] text-slate-400 font-medium tracking-wide uppercase">Banque Alimentaire</span>
+					</div>
+				</div>
+				<button @click="isMobileMenuOpen = false" 
+						class="md:hidden p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 focus:outline-none"
+						aria-label="Fermer le menu">
+					<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+					</svg>
+				</button>
+			</div>
+
+			<!-- Navigation Links -->
+			<div class="flex-1 px-4 py-6 overflow-y-auto space-y-6">
+				<div>
+					<p class="px-3 text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">
+						Menu principal
+					</p>
+					<nav class="space-y-1.5">
+						<button v-for="item in navItems" 
+								:key="item.id"
+								@click="selectRoute(item.id)"
+								:class="[
+									'w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 text-left',
+									currentTool === item.id 
+										? 'bg-blue-600 text-white shadow-md shadow-blue-950/50' 
+										: 'text-slate-300 hover:bg-slate-800/80 hover:text-white'
+								]">
+							<!-- Databases Icon -->
+							<svg v-if="item.id === 'gestion-dbs'" class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"/>
+							</svg>
+							<!-- Structures Icon -->
+							<svg v-if="item.id === 'profils-structures'" class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+							</svg>
+							<!-- AssoConnect Icon -->
+							<svg v-if="item.id === 'assoconnect'" class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+							</svg>
+							<!-- Administration Icon -->
+							<svg v-if="item.id === 'administration'" class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+							</svg>
+							<span class="truncate">{{ item.label }}</span>
+						</button>
+					</nav>
+				</div>
+			</div>
+
+			<!-- Sidebar Footer -->
+			<div class="p-4 border-t border-slate-800 bg-slate-950/30 text-xs text-slate-400">
+				<div class="flex items-center justify-between">
+					<span>Apps Script GAS</span>
+					<span class="inline-flex items-center gap-1.5 text-emerald-400 font-medium">
+						<span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+						Connecté
+					</span>
+				</div>
+			</div>
+		</aside>
+
+		<!-- MAIN CONTENT WRAPPER -->
+		<div class="flex-1 flex flex-col min-w-0">
+			<!-- TOP NAVBAR -->
+			<header class="h-16 bg-white border-b border-slate-200 px-6 flex items-center justify-between sticky top-0 z-30 shadow-xs">
+				<div class="flex items-center gap-4">
+					<button @click="isMobileMenuOpen = true" 
+							class="md:hidden p-2 rounded-lg text-slate-600 hover:bg-slate-100 focus:outline-none"
+							aria-label="Ouvrir le menu">
+						<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+						</svg>
+					</button>
+					<h1 class="text-lg font-bold text-slate-900 tracking-tight">
+						{{ currentRouteTitle }}
+					</h1>
+				</div>
+
+				<!-- Global Persistent Header Indicators -->
+				<div class="flex items-center gap-4 text-sm">
+					<!-- Active User Indicator -->
+					<div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100 text-slate-700 font-medium">
+						<svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+						</svg>
+						<span class="truncate max-w-[200px]">{{ currentUserEmail }}</span>
+					</div>
+
+					<!-- Active Database Indicator with Quick Management Link -->
+					<div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-50 text-blue-800 font-medium border border-blue-200">
+						<svg class="w-4 h-4 text-blue-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"/>
+						</svg>
+						<span class="truncate">Base: <strong class="font-semibold">{{ activeDbKey }}</strong></span>
+						<button @click="selectRoute('gestion-dbs')" 
+								title="Gérer les bases de données"
+								class="p-1 rounded-md text-blue-600 hover:bg-blue-100 hover:text-blue-900 transition-colors ml-1 focus:outline-none">
+							<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+							</svg>
+						</button>
+					</div>
+				</div>
+			</header>
+
+			<!-- VIEWPORT CONTENT -->
+			<main class="flex-1 p-6 md:p-8 max-w-7xl w-full mx-auto">
 				<component :is="currentToolComponent" />
 			</main>
 		</div>
+
 	</div>
 </template>
 
@@ -54,22 +151,16 @@ export default {
 	setup()
 	{
 		const currentUserEmail = ref('Chargement...')
-		const activeDatabaseIndicator = ref('Aucune')
+		const activeDbKey = ref('ba13')
+		const isMobileMenuOpen = ref(false)
 
-		const sections = [
-			{
-				id: 'main',
-				name: 'Menu principal',
-				tools: [
-					{ id: 'gestion-dbs', name: 'Gestion des bases de données' },
-					{ id: 'profils-structures', name: 'Profils de structures' },
-					{ id: 'assoconnect', name: 'AssoConnect' },
-					{ id: 'administration', name: 'Administration' }
-				]
-			}
+		const navItems = [
+			{ id: 'gestion-dbs', label: 'Gestion des bases de données' },
+			{ id: 'profils-structures', label: 'Profils de structures' },
+			{ id: 'assoconnect', label: 'AssoConnect' },
+			{ id: 'administration', label: 'Administration' }
 		]
 
-		const currentSection = ref('main')
 		const currentTool = ref('gestion-dbs')
 
 		const toolComponentMap = {
@@ -84,7 +175,13 @@ export default {
 			return toolComponentMap[currentTool.value] || DatabaseManagement
 		})
 
-		const loadUserEmail = () =>
+		const currentRouteTitle = computed(() =>
+		{
+			const found = navItems.find(i => i.id === currentTool.value)
+			return found ? found.label : 'Maestro'
+		})
+
+		const loadUserData = () =>
 		{
 			if (window.google?.script?.run)
 			{
@@ -98,32 +195,37 @@ export default {
 						currentUserEmail.value = 'Utilisateur inconnu'
 					})
 					.Maestro_getCurrentUserEmail()
+
+				google.script.run
+					.withSuccessHandler(dbs =>
+					{
+						if (Array.isArray(dbs) && dbs.length > 0)
+						{
+							activeDbKey.value = dbs[0].dbKey || 'ba13'
+						}
+					})
+					.withFailureHandler(() => {})
+					.Maestro_getUserDbs()
 			}
 			else
 			{
 				currentUserEmail.value = 'dev@local.host'
+				activeDbKey.value = 'ba13'
 			}
 		}
 
-		const applyState = (secId, toolId) =>
+		const applyState = (toolId) =>
 		{
 			if (toolComponentMap[toolId])
 			{
-				currentSection.value = secId
 				currentTool.value = toolId
 			}
 		}
 
-		const getToolUrl = (secId, toolId) =>
+		const updateHistory = (toolId, isReplace = false) =>
 		{
-			const baseUrl = window.DEPLOYMENT_URL || ''
-			return `${baseUrl}?section=${secId}&tool=${toolId}`
-		}
-
-		const updateHistory = (secId, toolId, isReplace = false) =>
-		{
-			const stateObject = { section: secId, tool: toolId }
-			const queryParams = { section: secId, tool: toolId }
+			const stateObject = { tool: toolId }
+			const queryParams = { tool: toolId }
 
 			if (window.google?.script?.history)
 			{
@@ -138,9 +240,7 @@ export default {
 			}
 			else
 			{
-				// Fallback for local development
 				const url = new URL(window.location.href)
-				url.searchParams.set('section', secId)
 				url.searchParams.set('tool', toolId)
 				url.hash = ''
 				if (isReplace)
@@ -154,59 +254,55 @@ export default {
 			}
 		}
 
-		const selectTool = (secId, toolId) =>
+		const selectRoute = (toolId) =>
 		{
-			applyState(secId, toolId)
-			updateHistory(secId, toolId, false)
+			applyState(toolId)
+			updateHistory(toolId, false)
+			isMobileMenuOpen.value = false
 		}
 
 		const handlePopState = (e) =>
 		{
-			if (e && e.state && e.state.section && e.state.tool)
+			if (e && e.state && e.state.tool)
 			{
-				applyState(e.state.section, e.state.tool)
+				applyState(e.state.tool)
 			}
 			else
 			{
 				const params = new URLSearchParams(window.location.search)
-				const sec = params.get('section') || 'main'
 				const tool = params.get('tool') || 'gestion-dbs'
 				if (toolComponentMap[tool])
 				{
-					applyState(sec, tool)
+					applyState(tool)
 				}
 			}
 		}
 
 		onMounted(() =>
 		{
-			loadUserEmail()
+			loadUserData()
 
-			// 1. Check initial params injected from server (window.INITIAL_PARAMS)
 			const initialParams = window.INITIAL_PARAMS || {}
-			const initSec = initialParams.section || 'main'
 			const initTool = initialParams.tool
 
 			if (initTool && toolComponentMap[initTool])
 			{
-				applyState(initSec, initTool)
-				updateHistory(initSec, initTool, true)
+				applyState(initTool)
+				updateHistory(initTool, true)
 			}
 			else
 			{
-				// 2. Check browser query parameters
 				const params = new URLSearchParams(window.location.search)
-				const qSec = params.get('section') || 'main'
 				const qTool = params.get('tool')
 
 				if (qTool && toolComponentMap[qTool])
 				{
-					applyState(qSec, qTool)
-					updateHistory(qSec, qTool, true)
+					applyState(qTool)
+					updateHistory(qTool, true)
 				}
 				else
 				{
-					updateHistory(currentSection.value, currentTool.value, true)
+					updateHistory(currentTool.value, true)
 				}
 			}
 
@@ -215,11 +311,10 @@ export default {
 				google.script.history.setChangeHandler((e) =>
 				{
 					const params = e.location?.parameters || {}
-					const sec = params.section || 'main'
 					const tool = params.tool || 'gestion-dbs'
 					if (toolComponentMap[tool])
 					{
-						applyState(sec, tool)
+						applyState(tool)
 					}
 				})
 			}
@@ -239,145 +334,26 @@ export default {
 
 		return {
 			currentUserEmail,
-			activeDatabaseIndicator,
-			sections,
-			currentSection,
+			activeDbKey,
+			isMobileMenuOpen,
+			navItems,
 			currentTool,
 			currentToolComponent,
-			getToolUrl,
-			selectTool
+			currentRouteTitle,
+			selectRoute
 		}
 	}
 }
 </script>
 
 <style>
-body {
-	margin: 0;
-	background: #f5f7fa;
-	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-	color: #333;
+[v-cloak] {
+	display: none;
 }
-
-.app-container {
-	max-width: 1200px;
-	margin: 0 auto;
-	padding: 20px;
+.fade-enter-active, .fade-leave-active {
+	transition: opacity 0.2s ease;
 }
-
-.app-header {
-	background: white;
-	padding: 20px 24px;
-	border-radius: 8px;
-	box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-	margin-bottom: 20px;
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	flex-wrap: wrap;
-	gap: 16px;
-}
-
-.header-titles h1 {
-	margin: 0 0 4px 0;
-	color: #1a73e8;
-	font-size: 24px;
-}
-
-.subtitle {
-	margin: 0;
-	color: #5f6368;
-	font-size: 14px;
-}
-
-.header-indicators {
-	display: flex;
-	flex-direction: column;
-	gap: 6px;
-	font-size: 13px;
-	color: #3c4043;
-	background: #f8f9fa;
-	padding: 10px 14px;
-	border-radius: 6px;
-	border: 1px solid #e0e0e0;
-}
-
-.indicator-item {
-	display: flex;
-	gap: 8px;
-}
-
-.main-layout {
-	display: flex;
-	gap: 24px;
-}
-
-.sidebar {
-	width: 260px;
-	background: white;
-	padding: 16px;
-	border-radius: 8px;
-	box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-	flex-shrink: 0;
-}
-
-.nav-section {
-	margin-bottom: 20px;
-}
-
-.section-title {
-	font-size: 13px;
-	text-transform: uppercase;
-	color: #5f6368;
-	margin: 0 0 8px 8px;
-	letter-spacing: 0.5px;
-}
-
-.tool-list {
-	list-style: none;
-	padding: 0;
-	margin: 0;
-}
-
-.tool-list li {
-	margin-bottom: 4px;
-}
-
-.tool-list a {
-	display: block;
-	padding: 10px 12px;
-	color: #3c4043;
-	text-decoration: none;
-	border-radius: 4px;
-	font-size: 14px;
-	transition: background 0.2s, color 0.2s;
-}
-
-.tool-list a:hover {
-	background: #f1f3f4;
-	color: #1a73e8;
-}
-
-.tool-list a.active {
-	background: #e8f0fe;
-	color: #1a73e8;
-	font-weight: 500;
-}
-
-.content-area {
-	flex-grow: 1;
-}
-
-@media (max-width: 768px) {
-	.main-layout {
-		flex-direction: column;
-	}
-	.sidebar {
-		width: 100%;
-	}
-	.app-header {
-		flex-direction: column;
-		align-items: flex-start;
-	}
+.fade-enter-from, .fade-leave-to {
+	opacity: 0;
 }
 </style>
