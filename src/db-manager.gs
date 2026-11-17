@@ -11,12 +11,11 @@ Maestro.DbManager = class DbManager
 		const ss = SpreadsheetApp.create('Maestro DB ' + normalizedDbKey);
 		const spreadsheetId = ss.getId();
 		
-		// Tag file with MAESTRO_DATABASE_KEY custom property (strict, no fallback)
-		Drive.Properties.insert
-		({
-			key: 'MAESTRO_DATABASE_KEY',
-			value: normalizedDbKey,
-			visibility: 'PUBLIC'
+		// Tag file with MAESTRO_DATABASE_KEY custom property using Drive API v3
+		Drive.Files.update({
+			properties: {
+				MAESTRO_DATABASE_KEY: normalizedDbKey
+			}
 		}, spreadsheetId);
 		
 		// Initialize Parameters sheet
@@ -58,12 +57,12 @@ Maestro.DbManager = class DbManager
 	static findDbByKey (dbKey)
 	{
 		const normalizedDbKey = dbKey.toLowerCase();
-		const query = 'properties has { key=\'MAESTRO_DATABASE_KEY\' and value=\'' + normalizedDbKey + '\' and visibility=\'PUBLIC\' } and trashed = false';
+		const query = 'properties has { key=\'MAESTRO_DATABASE_KEY\' and value=\'' + normalizedDbKey + '\' } and trashed = false';
 		const result = Drive.Files.list({ q: query });
 		
-		if (result && result.items && result.items.length > 0)
+		if (result && result.files && result.files.length > 0)
 		{
-			const fileItem = result.items[0];
+			const fileItem = result.files[0];
 			return {
 				dbKey: normalizedDbKey,
 				spreadsheetId: fileItem.id
@@ -75,24 +74,20 @@ Maestro.DbManager = class DbManager
 
 	static listAccessibleDbs ()
 	{
-		const query = 'properties has { key=\'MAESTRO_DATABASE_KEY\' and visibility=\'PUBLIC\' } and trashed = false';
+		const query = 'properties has { key=\'MAESTRO_DATABASE_KEY\' } and trashed = false';
 		const result = Drive.Files.list({ q: query });
 		const dbs = [];
 		
-		if (result && result.items)
+		if (result && result.files)
 		{
-			result.items.forEach(item =>
+			result.files.forEach(item =>
 			{
-				if (item.properties)
+				if (item.properties && item.properties.MAESTRO_DATABASE_KEY)
 				{
-					const prop = item.properties.find(p => p.key === 'MAESTRO_DATABASE_KEY' && p.visibility === 'PUBLIC');
-					if (prop && prop.value)
-					{
-						dbs.push({
-							dbKey: prop.value.toLowerCase(),
-							spreadsheetId: item.id
-						});
-					}
+					dbs.push({
+						dbKey: item.properties.MAESTRO_DATABASE_KEY.toLowerCase(),
+						spreadsheetId: item.id
+					});
 				}
 			});
 		}
