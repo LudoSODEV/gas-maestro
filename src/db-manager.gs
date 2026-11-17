@@ -4,7 +4,7 @@
  */
 Maestro.DbManager = class DbManager
 {
-	static createDb (dbKey)
+	static createDb(dbKey)
 	{
 		const normalizedDbKey = dbKey.toLowerCase();
 		
@@ -54,7 +54,7 @@ Maestro.DbManager = class DbManager
 		};
 	}
 
-	static findDbByKey (dbKey)
+	static findDbByKey(dbKey)
 	{
 		const normalizedDbKey = dbKey.toLowerCase();
 		const query = "properties has { key='MAESTRO_DATABASE_KEY' and value='" + normalizedDbKey + "' } and trashed = false";
@@ -72,7 +72,7 @@ Maestro.DbManager = class DbManager
 		return null;
 	}
 
-	static listAccessibleDbs ()
+	static listAccessibleDbs()
 	{
 		const query = "properties has { key='MAESTRO_DATABASE_KEY' } and trashed = false";
 		const result = Drive.Files.list({ q: query });
@@ -95,7 +95,7 @@ Maestro.DbManager = class DbManager
 		return dbs;
 	}
 
-	static getOrCreateDb (dbKey)
+	static getOrCreateDb(dbKey)
 	{
 		let db = Maestro.DbManager.findDbByKey(dbKey);
 		

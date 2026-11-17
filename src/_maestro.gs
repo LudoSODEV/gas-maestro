@@ -12,32 +12,32 @@
  */
 const Maestro = {};
 
-function doGet (e)
+function doGet(e)
 {
 	return Maestro.Webapp.doGet(e);
 }
 
-function Maestro_getUserDbs ()
+function Maestro_getUserDbs()
 {
 	return Maestro.Webapp.getUserDbs();
 }
 
-function Maestro_saveUserDbs (dbs)
+function Maestro_saveUserDbs(dbs)
 {
 	return Maestro.Webapp.saveUserDbs(dbs);
 }
 
-function Maestro_getCurrentUserEmail ()
+function Maestro_getCurrentUserEmail()
 {
 	return Maestro.Webapp.getCurrentUserEmail();
 }
 
-function Maestro_listAccessibleDbs ()
+function Maestro_listAccessibleDbs()
 {
 	return Maestro.Webapp.listAccessibleDbs();
 }
 
-function Maestro_getOrCreateAutoDb ()
+function Maestro_getOrCreateAutoDb()
 {
 	return Maestro.Webapp.getOrCreateAutoDb();
 }

@@ -3,7 +3,7 @@
  * Handles web app routing, user properties management, and database automation.
  */
 Maestro.Webapp = {
-	doGet (e)
+	doGet(e)
 	{
 		const params = e && e.parameter ? e.parameter : {};
 		const template = HtmlService.createTemplateFromFile('index');
@@ -16,7 +16,7 @@ Maestro.Webapp = {
 			.setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 	},
 
-	getUserDbs ()
+	getUserDbs()
 	{
 		const props = PropertiesService.getUserProperties();
 		const rawData = props.getProperty('MAESTRO_DATABASES');
@@ -29,24 +29,24 @@ Maestro.Webapp = {
 		return [];
 	},
 
-	saveUserDbs (dbs)
+	saveUserDbs(dbs)
 	{
 		const props = PropertiesService.getUserProperties();
 		props.setProperty('MAESTRO_DATABASES', JSON.stringify(dbs));
 		return { success: true };
 	},
 
-	getCurrentUserEmail ()
+	getCurrentUserEmail()
 	{
 		return Session.getActiveUser().getEmail() || 'Unknown user';
 	},
 
-	listAccessibleDbs ()
+	listAccessibleDbs()
 	{
 		return Maestro.DbManager.listAccessibleDbs();
 	},
 
-	getOrCreateAutoDb ()
+	getOrCreateAutoDb()
 	{
 		const email = Session.getActiveUser().getEmail() || '';
 		const match = email.match (/^(ba[0-9]+)\./i);
