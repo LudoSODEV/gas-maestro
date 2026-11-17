@@ -48,11 +48,19 @@ Maestro.Webapp = {
 
 ---
 
-## 3. Frontend Build & Bundling Setup
+## 3. Frontend Security & Third-Party Dependencies
+
+To maintain absolute system integrity and protect against supply-chain vulnerabilities or arbitrary code injection within the GAS container sandbox:
+- **Strict Version Pinning**: Any resource requested from a third-party domain (such as CDNs, external stylesheets, or external JavaScript libraries) **must be strictly pinned to an explicit, immutable version number** (e.g., `https://cdn.jsdelivr.net/npm/package@1.2.3/file.js`). Floating versions, wildcards, or `latest` tags are strictly prohibited.
+- **Subresource Integrity (SRI)**: All third-party script and style tags must include a valid cryptographic **Subresource Integrity (SRI) hash** (`integrity="..."`) and `crossorigin="anonymous"` attribute to ensure the browser verifies that fetched files have not been unexpectedly manipulated.
+
+---
+
+## 4. Frontend Build & Bundling Setup
 
 To avoid multi-file asset loading overhead and CORS limitations inside GAS `iframe` sandboxes, all Vue components, styles, and assets are bundled into a single standalone HTML file (`index.html`) at build time.
 
-### 3.1 Project Layout
+### 4.1 Project Layout
 
 ```text
 gas-maestro/
@@ -71,7 +79,7 @@ gas-maestro/
 └── package.json            # Root build & clasp scripts
 ```
 
-### 3.2 Vite Configuration (`vite.config.js`)
+### 4.2 Vite Configuration (`vite.config.js`)
 
 ```javascript
 import { defineConfig } from 'vite'
@@ -91,11 +99,11 @@ export default defineConfig({
 
 ---
 
-## 4. Stateful URL Routing & `google.script.history`
+## 5. Stateful URL Routing & `google.script.history`
 
 Standard HTML5 `history.pushState` fails to update the top-level browser address bar when executed within a GAS `<iframe>`. Furthermore, relative URLs resolve incorrectly to `script.googleusercontent.com`.
 
-### 4.1 Server-Side Injection (`index.html` template variables)
+### 5.1 Server-Side Injection (`index.html` template variables)
 
 ```html
 <!DOCTYPE html>
@@ -115,14 +123,14 @@ Standard HTML5 `history.pushState` fails to update the top-level browser address
 </html>
 ```
 
-### 4.2 Client-Side History Synchronization (`App.vue`)
+### 5.2 Client-Side History Synchronization (`App.vue`)
 
 - **Top-Level Address Bar Sync**: Uses `google.script.history.push` / `replace` when running inside GAS, falling back to standard `history.pushState` during local Vite development.
 - **Absolute Deployment URLs**: All navigation links (`href`) are prefixed with `window.DEPLOYMENT_URL`, ensuring middle-clicks and "Open in new tab" function correctly without sandboxed URL corruption.
 
 ---
 
-## 5. Development & Deployment Workflow
+## 6. Development & Deployment Workflow
 
 1. **Local Development (Frontend Vite Server)**:
    ```bash
