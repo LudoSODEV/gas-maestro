@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maestro — Banque Alimentaire</title>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#1d4ed8',
+                            700: '#1e40af',
+                            800: '#1e3a8a',
+                            900: '#0f172a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Vue 3 via CDN -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        /* Custom subtle scrollbar & Vue transition helpers */
+        [v-cloak] { display: none; }
+        .fade-enter-active, .fade-leave-active { transition: opacity 0.2s ease; }
+        .fade-enter-from, .fade-leave-to { opacity: 0; }
+        .slide-enter-active, .slide-leave-active { transition: transform 0.25s ease-out; }
+        .slide-enter-from, .slide-leave-to { transform: translateX(-100%); }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased selection:bg-blue-100 selection:text-blue-900">
+
+<div id="app" v-cloak class="min-h-screen flex flex-col md:flex-row">
+
+    <!-- =====================================================================
+         MOBILE DRAWER BACKDROP
+    ====================================================================== -->
+    <transition name="fade">
+        <div v-if="isMobileMenuOpen" 
+             @click="isMobileMenuOpen = false"
+             class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-40 md:hidden">
+        </div>
+    </transition>
+
+    <!-- =====================================================================
+         SIDEBAR NAVIGATION (Desktop Fixed + Mobile Slide-over Drawer)
+    ====================================================================== -->
+    <aside :class="[
+               'fixed inset-y-0 left-0 z-50 w-72 bg-slate-900 text-slate-200 flex flex-col transition-transform duration-200 ease-in-out md:translate-x-0 md:static md:shrink-0',
+               isMobileMenuOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'
+           ]">
+        <!-- Brand Logo Area -->
+        <div class="h-16 flex items-center justify-between px-6 border-b border-slate-800 bg-slate-950/40">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-blue-500 to-emerald-500 flex items-center justify-center text-white font-bold shadow-sm">
+                    M
+                </div>
+                <div>
+                    <span class="text-white font-bold text-lg tracking-tight block leading-none">Maestro</span>
+                    <span class="text-[11px] text-slate-400 font-medium tracking-wide uppercase">Banque Alimentaire</span>
+                </div>
+            </div>
+            <!-- Close Drawer Button (Mobile Only) -->
+            <button @click="isMobileMenuOpen = false" 
+                    class="md:hidden p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 focus:outline-none"
+                    aria-label="Fermer le menu">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Navigation Links -->
+        <div class="flex-1 px-4 py-6 overflow-y-auto space-y-6">
+            <div>
+                <p class="px-3 text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">
+                    Menu principal
+                </p>
+                <nav class="space-y-1.5">
+                    <button v-for="item in navItems" 
+                            :key="item.id"
+                            @click="selectRoute(item.id)"
+                            :class="[
+                                'w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 text-left',
+                                currentRoute === item.id 
+                                    ? 'bg-blue-600 text-white shadow-md shadow-blue-950/50' 
+                                    : 'text-slate-300 hover:bg-slate-800/80 hover:text-white'
+                            ]">
+                        <!-- Database Icon -->
+                        <svg v-if="item.id === 'databases'" class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"/>
+                        </svg>
+                        <!-- Structures Icon -->
+                        <svg v-if="item.id === 'structures'" class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                        </svg>
+                        <!-- AssoConnect / Validation Icon -->
+                        <svg v-if="item.id === 'assoconnect'" class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <!-- Administration Icon -->
+                        <svg v-if="item.id === 'admin'" class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                        <span class="truncate">{{ item.label }}</span>
+                        <span v-if="item.badge" 
+                              :class="[
+                                  'ml-auto text-xs font-semibold px-2 py-0.5 rounded-full',
+                                  currentRoute === item.id ? 'bg-blue-500 text-white' : 'bg-amber-500/20 text-amber-300'
+                              ]">
+                            {{ item.badge }}
+                        </span>
+                    </button>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Sidebar Footer Info -->
+        <div class="p-4 border-t border-slate-800 bg-slate-950/30 text-xs text-slate-400">
+            <div class="flex items-center justify-between">
+                <span>Google Workspace Apps Script</span>
+                <span class="inline-flex items-center gap-1.5 text-emerald-400 font-medium">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    Connecté
+                </span>
+            </div>
+        </div>
+    </aside>
+
+    <!-- =====================================================================
+         MAIN CONTENT SHELL (Top Header + View Viewport)
+    ====================================================================== -->
+    <div class="flex-1 flex flex-col min-w-0">
+
+        <!-- Persistent Top Bar / Header -->
+        <header class="sticky top-0 z-30 h-16 bg-white border-b border-slate-200 px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-3 shadow-2xs">
+            <!-- Left: Hamburger Trigger (Mobile) + Mobile Brand -->
+            <div class="flex items-center gap-3">
+                <button @click="isMobileMenuOpen = true"
+                        class="md:hidden p-2 -ml-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        aria-label="Ouvrir le menu principal">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                    </svg>
+                </button>
+                <span class="md:hidden font-bold text-slate-900 text-base">Maestro</span>
+            </div>
+
+            <!-- Right: Global Context Indicators (Active DB + Logged-in User) -->
+            <div class="flex items-center gap-2 sm:gap-4 ml-auto overflow-x-auto py-1">
+                <!-- Active Database Indicator Badge -->
+                <div @click="selectRoute('databases')"
+                     title="Cliquer pour gérer les bases de données"
+                     class="cursor-pointer inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100 transition-colors shrink-0">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    <span class="hidden sm:inline text-emerald-700">Base de données active :</span>
+                    <span class="sm:hidden text-emerald-700">Base :</span>
+                    <strong class="font-bold text-emerald-950">{{ activeDatabase ? activeDatabase.name : 'Aucune' }}</strong>
+                </div>
+
+                <!-- Logged-in User Indicator -->
+                <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs sm:text-sm bg-slate-100 text-slate-700 border border-slate-200 shrink-0">
+                    <svg class="w-4 h-4 text-slate-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                    </svg>
+                    <span class="hidden lg:inline text-slate-500">Utilisateur connecté :</span>
+                    <span class="font-medium text-slate-800 truncate max-w-[140px] sm:max-w-none">{{ currentUser }}</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- =================================================================
+             DYNAMIC PAGE CONTENT AREA
+        ================================================================== -->
+        <main class="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
+
+            <!-- =============================================================
+                 VIEW 1: GESTION DES BASES DE DONNÉES (Primary View)
+            ============================================================== -->
+            <section v-if="currentRoute === 'databases'" class="space-y-6">
+                <!-- Page Header & Description -->
+                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 pb-2 border-b border-slate-200">
+                    <div>
+                        <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
+                            Gestion des bases de données
+                        </h1>
+                        <p class="mt-1.5 text-sm sm:text-base text-slate-600 max-w-3xl">
+                            Gérez vos connexions aux feuilles de calcul Google Sheets agissant comme bases de données régionales.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Top Action Bar -->
+                <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
+                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
+                        <!-- Button 1: Scan Google Drive -->
+                        <button @click="scanAvailableDatabases"
+                                :disabled="isScanning"
+                                class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 active:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/40 disabled:opacity-60 transition-all cursor-pointer">
+                            <svg :class="['w-4 h-4 text-blue-600', isScanning ? 'animate-spin' : '']" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                            </svg>
+                            <span>{{ isScanning ? 'Recherche en cours sur Drive...' : 'Rechercher les bases de données disponibles' }}</span>
+                        </button>
+
+                        <!-- Button 2: Create Database -->
+                        <button @click="openCreateModal"
+                                class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 shadow-xs focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all cursor-pointer">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                            </svg>
+                            <span>Créer une base de données</span>
+                        </button>
+                    </div>
+
+                    <div class="text-xs text-slate-500 text-right hidden xl:block">
+                        Propriété détectée : <code class="px-1.5 py-0.5 bg-slate-100 rounded text-slate-700 font-mono">MAESTRO_DATABASE_KEY</code>
+                    </div>
+                </div>
+
+                <!-- Database List Container -->
+                <div class="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
+                    <div class="px-5 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/60">
+                        <h2 class="text-base font-semibold text-slate-800">
+                            Tableau des bases de données
+                        </h2>
+                        <span class="text-xs font-medium px-2.5 py-1 rounded-full bg-slate-200/70 text-slate-700">
+                            {{ databases.length }} base{{ databases.length > 1 ? 's' : '' }} configurée{{ databases.length > 1 ? 's' : '' }}
+                        </span>
+                    </div>
+
+                    <!-- Empty State -->
+                    <div v-if="databases.length === 0" class="p-12 text-center">
+                        <div class="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
+                            </svg>
+                        </div>
+                        <h3 class="text-sm font-semibold text-slate-900">Aucune base de données disponible</h3>
+                        <p class="mt-1 text-sm text-slate-500">Lancez une recherche sur Google Drive ou créez une nouvelle feuille de calcul.</p>
+                    </div>
+
+                    <!-- DESKTOP & TABLET VIEW (md and up): Full Structured Table -->
+                    <div v-else class="hidden md:block overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="border-b border-slate-200 bg-slate-50/80 text-xs font-semibold uppercase tracking-wider text-slate-500">
+                                    <th class="py-3.5 px-5">Nom de la base</th>
+                                    <th class="py-3.5 px-5">Clé</th>
+                                    <th class="py-3.5 px-5">Identifiant du fichier</th>
+                                    <th class="py-3.5 px-5">Statut actif</th>
+                                    <th class="py-3.5 px-5 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-200 text-sm">
+                                <tr v-for="db in databases" 
+                                    :key="db.id"
+                                    :class="[
+                                        'transition-colors',
+                                        db.id === activeDatabaseId ? 'bg-emerald-50/35' : 'hover:bg-slate-50/80'
+                                    ]">
+                                    <!-- Nom de la base + Ouvrir link -->
+                                    <td class="py-4 px-5">
+                                        <div class="flex items-center gap-3">
+                                            <div>
+                                                <div class="font-semibold text-slate-900 flex items-center gap-2">
+                                                    <span>{{ db.name }}</span>
+                                                    <a :href="'https://docs.google.com/spreadsheets/d/' + db.fileId" 
+                                                       target="_blank" 
+                                                       rel="noopener noreferrer"
+                                                       @click.prevent="openExternalSheet(db)"
+                                                       class="inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-800 hover:underline px-2 py-0.5 rounded bg-blue-50 hover:bg-blue-100 transition-colors">
+                                                        <span>Ouvrir</span>
+                                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                                                        </svg>
+                                                    </a>
+                                                </div>
+                                                <div class="text-xs text-slate-500 mt-0.5">{{ db.region }}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+
+                                    <!-- Clé (Read-only badge) -->
+                                    <td class="py-4 px-5">
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-mono font-medium bg-slate-100 text-slate-700 border border-slate-200">
+                                            {{ db.key }}
+                                        </span>
+                                    </td>
+
+                                    <!-- Identifiant du fichier (Truncated + Copy button) -->
+                                    <td class="py-4 px-5">
+                                        <div class="inline-flex items-center gap-2 max-w-[230px] bg-slate-50 px-2.5 py-1 rounded-md border border-slate-200">
+                                            <code class="text-xs font-mono text-slate-600 truncate" :title="db.fileId">
+                                                {{ db.fileId }}
+                                            </code>
+                                            <button @click="copyFileId(db.fileId)" 
+                                                    title="Copier l'identifiant"
+                                                    class="text-slate-400 hover:text-blue-600 focus:outline-none shrink-0 cursor-pointer">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </td>
+
+                                    <!-- Statut actif -->
+                                    <td class="py-4 px-5">
+                                        <span v-if="db.id === activeDatabaseId"
+                                              class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                            <span class="w-2 h-2 rounded-full bg-emerald-600"></span>
+                                            Active
+                                        </span>
+                                        <button v-else
+                                                @click="setActiveDatabase(db.id)"
+                                                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-700 bg-white border border-slate-300 hover:border-blue-500 hover:text-blue-700 hover:bg-blue-50/50 transition-all cursor-pointer">
+                                            <span class="w-3 h-3 rounded-full border border-slate-400"></span>
+                                            Sélectionner
+                                        </button>
+                                    </td>
+
+                                    <!-- Actions -->
+                                    <td class="py-4 px-5 text-right">
+                                        <button @click="promptDeleteDatabase(db)"
+                                                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-red-600 hover:text-red-700 hover:bg-red-50 border border-transparent hover:border-red-200 transition-colors cursor-pointer">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                            </svg>
+                                            <span>Supprimer</span>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- MOBILE VIEW (< md): Responsive Card Layout -->
+                    <div v-if="databases.length > 0" class="md:hidden divide-y divide-slate-200">
+                        <div v-for="db in databases" 
+                             :key="'mob-' + db.id"
+                             :class="[
+                                 'p-4 space-y-3.5 transition-colors',
+                                 db.id === activeDatabaseId ? 'bg-emerald-50/40' : 'bg-white'
+                             ]">
+                            <!-- Card Top Row: Name, Region & Active Badge -->
+                            <div class="flex items-start justify-between gap-2">
+                                <div>
+                                    <div class="flex items-center gap-2">
+                                        <h3 class="font-bold text-base text-slate-900">{{ db.name }}</h3>
+                                        <span class="px-2 py-0.5 rounded text-xs font-mono font-medium bg-slate-100 text-slate-700 border border-slate-200">
+                                            {{ db.key }}
+                                        </span>
+                                    </div>
+                                    <p class="text-xs text-slate-500 mt-0.5">{{ db.region }}</p>
+                                </div>
+
+                                <span v-if="db.id === activeDatabaseId"
+                                      class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200 shrink-0">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                                    Active
+                                </span>
+                            </div>
+
+                            <!-- File ID Snippet -->
+                            <div class="flex items-center justify-between gap-2 bg-slate-50 px-3 py-2 rounded-lg border border-slate-200">
+                                <div class="min-w-0">
+                                    <span class="text-[11px] uppercase tracking-wider text-slate-400 block font-semibold">Identifiant du fichier</span>
+                                    <code class="text-xs font-mono text-slate-700 block truncate">{{ db.fileId }}</code>
+                                </div>
+                                <button @click="copyFileId(db.fileId)"
+                                        class="p-2 rounded-md text-slate-500 hover:text-blue-600 hover:bg-white border border-transparent hover:border-slate-200 shrink-0"
+                                        aria-label="Copier l'identifiant">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                                    </svg>
+                                </button>
+                            </div>
+
+                            <!-- Card Bottom Actions -->
+                            <div class="flex flex-wrap items-center justify-between gap-2 pt-1">
+                                <div class="flex items-center gap-2">
+                                    <button v-if="db.id !== activeDatabaseId"
+                                            @click="setActiveDatabase(db.id)"
+                                            class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200">
+                                        Sélectionner
+                                    </button>
+                                    <a :href="'https://docs.google.com/spreadsheets/d/' + db.fileId"
+                                       @click.prevent="openExternalSheet(db)"
+                                       class="inline-flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-medium text-slate-700 bg-white border border-slate-300 hover:bg-slate-50">
+                                        <span>Ouvrir</span>
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                                        </svg>
+                                    </a>
+                                </div>
+
+                                <button @click="promptDeleteDatabase(db)"
+                                        class="inline-flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-medium text-red-600 hover:bg-red-50">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                    </svg>
+                                    <span>Supprimer</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- =============================================================
+                 VIEW 2: PROFILS DE STRUCTURES (Secondary View Preview)
+            ============================================================== -->
+            <section v-if="currentRoute === 'structures'" class="space-y-6">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-slate-200">
+                    <div>
+                        <div class="flex items-center gap-2.5">
+                            <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
+                                Profils de structures
+                            </h1>
+                            <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                {{ activeDatabase ? activeDatabase.name : 'BA13' }}
+                            </span>
+                        </div>
+                        <p class="mt-1.5 text-sm sm:text-base text-slate-600">
+                            Annuaire des associations partenaires, gestion des alias et provisionnement des dossiers Google Drive.
+                        </p>
+                    </div>
+
+                    <button @click="provisionDriveFolders"
+                            :disabled="isProvisioning"
+                            class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 shadow-xs disabled:opacity-60 transition-all cursor-pointer shrink-0">
+                        <svg :class="['w-4 h-4', isProvisioning ? 'animate-spin' : '']" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                        </svg>
+                        <span>{{ isProvisioning ? 'Provisionnement...' : 'Provisionner les dossiers Drive' }}</span>
+                    </button>
+                </div>
+
+                <!-- Structures List -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div v-for="struct in structures" 
+                         :key="struct.vif"
+                         class="bg-white rounded-xl border border-slate-200 p-5 shadow-2xs flex flex-col justify-between gap-4">
+                        <div>
+                            <div class="flex items-start justify-between gap-2">
+                                <span class="text-xs font-mono font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200">
+                                    VIF : {{ struct.vif }}
+                                </span>
+                                <span :class="[
+                                    'text-xs font-medium px-2.5 py-0.5 rounded-full',
+                                    struct.driveReady ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                                ]">
+                                    {{ struct.driveReady ? 'Dossier Drive OK' : 'Dossier manquant' }}
+                                </span>
+                            </div>
+                            <h3 class="font-bold text-slate-900 text-base mt-3">{{ struct.name }}</h3>
+                            <p class="text-xs text-slate-500 mt-0.5">CAR : {{ struct.car }}</p>
+
+                            <div class="mt-3">
+                                <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Alias connus :</span>
+                                <div class="flex flex-wrap gap-1.5 mt-1">
+                                    <span v-for="alias in struct.aliases" :key="alias" class="text-xs px-2 py-0.5 rounded bg-slate-100 text-slate-600">
+                                        {{ alias }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-medium">
+                            <a href="#" @click.prevent="showToast('Ouverture de la fiche AssoConnect pour ' + struct.name)" class="text-blue-600 hover:underline">
+                                AssoConnect ↗
+                            </a>
+                            <a href="#" @click.prevent="showToast('Ouverture du suivi Collecte pour ' + struct.name)" class="text-blue-600 hover:underline">
+                                Portail Collecte ↗
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- =============================================================
+                 VIEW 3: ASSOCONNECT (Validation & Anomalies Preview)
+            ============================================================== -->
+            <section v-if="currentRoute === 'assoconnect'" class="space-y-6">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-slate-200">
+                    <div>
+                        <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
+                            AssoConnect — Contrôle d'intégrité
+                        </h1>
+                        <p class="mt-1.5 text-sm sm:text-base text-slate-600">
+                            Détection des anomalies de synchronisation (zéros initiaux des codes VIF, structures non mappées).
+                        </p>
+                    </div>
+
+                    <!-- CAR Filter -->
+                    <div class="flex items-center gap-2">
+                        <label for="carFilter" class="text-sm font-medium text-slate-700 whitespace-nowrap">Filtrer par CAR :</label>
+                        <select id="carFilter" v-model="selectedCar" class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="ALL">Tous les CAR</option>
+                            <option value="CAR Marseille Nord">CAR Marseille Nord</option>
+                            <option value="CAR Aix-Pays d'Aix">CAR Aix-Pays d'Aix</option>
+                            <option value="CAR Arles-Camargue">CAR Arles-Camargue</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Anomalies Table -->
+                <div class="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="border-b border-slate-200 bg-slate-50 text-xs font-semibold uppercase tracking-wider text-slate-500">
+                                    <th class="py-3.5 px-5">Structure</th>
+                                    <th class="py-3.5 px-5">CAR</th>
+                                    <th class="py-3.5 px-5">Type d'anomalie</th>
+                                    <th class="py-3.5 px-5">Valeur détectée</th>
+                                    <th class="py-3.5 px-5 text-right">Correction</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-200 text-sm">
+                                <tr v-for="item in filteredAnomalies" :key="item.id" class="hover:bg-slate-50/70">
+                                    <td class="py-3.5 px-5 font-medium text-slate-900">{{ item.structure }}</td>
+                                    <td class="py-3.5 px-5 text-slate-600">{{ item.car }}</td>
+                                    <td class="py-3.5 px-5">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                                            {{ item.issue }}
+                                        </span>
+                                    </td>
+                                    <td class="py-3.5 px-5 font-mono text-xs text-slate-700">{{ item.detail }}</td>
+                                    <td class="py-3.5 px-5 text-right">
+                                        <button @click="resolveAnomaly(item.id)" class="px-3 py-1.5 rounded-lg text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 cursor-pointer">
+                                            Corriger automatiquement
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr v-if="filteredAnomalies.length === 0">
+                                    <td colspan="5" class="py-10 text-center text-slate-500 text-sm">
+                                        Aucune anomalie détectée pour ce filtre.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- =============================================================
+                 VIEW 4: ADMINISTRATION (Global Settings & Batch Actions)
+            ============================================================== -->
+            <section v-if="currentRoute === 'admin'" class="space-y-6">
+                <div class="pb-2 border-b border-slate-200">
+                    <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
+                        Administration
+                    </h1>
+                    <p class="mt-1.5 text-sm sm:text-base text-slate-600">
+                        Paramètres globaux de l'instance Maestro et opérations par lots sur l'espace Google Workspace.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Batch Operations Card -->
+                    <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-2xs space-y-4">
+                        <h2 class="text-base font-bold text-slate-900">Opérations par lots (Batch)</h2>
+                        <p class="text-sm text-slate-600">
+                            Exécutez des tâches de maintenance sur l'ensemble des structures de la base active ({{ activeDatabase ? activeDatabase.name : 'Aucune' }}).
+                        </p>
+                        <div class="flex flex-col sm:flex-row gap-3 pt-2">
+                            <button @click="showToast('Création en lot des dossiers Google Drive lancée en arrière-plan.')"
+                                    class="px-4 py-2.5 rounded-lg text-sm font-medium text-white bg-slate-900 hover:bg-slate-800 cursor-pointer">
+                                Créer les dossiers Drive en lot
+                            </button>
+                            <button @click="showToast('Planification de la revue annuelle enregistrée.')"
+                                    class="px-4 py-2.5 rounded-lg text-sm font-medium text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 cursor-pointer">
+                                Planifier la revue
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Environment Info Card -->
+                    <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-2xs space-y-3">
+                        <h2 class="text-base font-bold text-slate-900">Propriétés du script & Cache</h2>
+                        <div class="text-sm text-slate-600 space-y-2">
+                            <div class="flex justify-between py-1.5 border-b border-slate-100">
+                                <span>Compte d'exécution</span>
+                                <span class="font-mono text-xs text-slate-800">{{ currentUser }}</span>
+                            </div>
+                            <div class="flex justify-between py-1.5 border-b border-slate-100">
+                                <span>Balise de découverte Drive</span>
+                                <span class="font-mono text-xs text-slate-800">MAESTRO_DATABASE_KEY</span>
+                            </div>
+                            <div class="flex justify-between py-1.5">
+                                <span>Version de schéma</span>
+                                <span class="font-mono text-xs text-emerald-700 font-semibold">v2.4.0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- =====================================================================
+         MODAL: CRÉER UNE BASE DE DONNÉES
+    ====================================================================== -->
+    <transition name="fade">
+        <div v-if="isCreateModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-xl max-w-md w-full overflow-hidden" @click.stop>
+                <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+                    <h3 class="text-lg font-bold text-slate-900">Créer une base de données</h3>
+                    <button @click="isCreateModalOpen = false" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <form @submit.prevent="createDatabase" class="p-6 space-y-4">
+                    <div>
+                        <label for="dbName" class="block text-sm font-medium text-slate-700 mb-1">
+                            Nom de la base <span class="text-red-500">*</span>
+                        </label>
+                        <input id="dbName" 
+                               v-model.trim="newDbForm.name" 
+                               @input="autoGenerateKey"
+                               type="text" 
+                               required
+                               placeholder="ex. BA33"
+                               class="w-full rounded-lg border border-slate-300 px-3.5 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+
+                    <div>
+                        <label for="dbKey" class="block text-sm font-medium text-slate-700 mb-1">
+                            Clé (identifiant unique) <span class="text-red-500">*</span>
+                        </label>
+                        <input id="dbKey" 
+                               v-model.trim="newDbForm.key" 
+                               type="text" 
+                               required
+                               placeholder="ex. ba33"
+                               class="w-full rounded-lg border border-slate-300 px-3.5 py-2 text-sm font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <p class="mt-1 text-xs text-slate-500">Enregistrée dans la propriété <code class="font-mono">MAESTRO_DATABASE_KEY</code> du fichier.</p>
+                    </div>
+
+                    <div>
+                        <label for="dbRegion" class="block text-sm font-medium text-slate-700 mb-1">
+                            Antenne / Département (optionnel)
+                        </label>
+                        <input id="dbRegion" 
+                               v-model.trim="newDbForm.region" 
+                               type="text" 
+                               placeholder="ex. Banque Alimentaire de Bordeaux et de la Gironde"
+                               class="w-full rounded-lg border border-slate-300 px-3.5 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+
+                    <div class="pt-3 flex items-center justify-end gap-3 border-t border-slate-100">
+                        <button type="button" 
+                                @click="isCreateModalOpen = false"
+                                class="px-4 py-2 rounded-lg text-sm font-medium text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 cursor-pointer">
+                            Annuler
+                        </button>
+                        <button type="submit"
+                                class="px-4 py-2 rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 shadow-xs cursor-pointer">
+                            Créer la feuille Google Sheets
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </transition>
+
+    <!-- =====================================================================
+         MODAL: CONFIRMATION DE SUPPRESSION (Custom non-blocking modal)
+    ====================================================================== -->
+    <transition name="fade">
+        <div v-if="databaseToDelete" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-xl max-w-md w-full p-6 space-y-4">
+                <div class="flex items-start gap-3">
+                    <div class="w-10 h-10 rounded-full bg-red-100 text-red-600 flex items-center justify-center shrink-0">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-slate-900">Retirer la base de données ?</h3>
+                        <p class="mt-1 text-sm text-slate-600">
+                            Voulez-vous supprimer <strong class="text-slate-900">{{ databaseToDelete.name }}</strong> (<code class="font-mono text-xs">{{ databaseToDelete.key }}</code>) de vos propriétés utilisateur locales ?
+                        </p>
+                        <p class="mt-2 text-xs text-slate-500">
+                            Le fichier Google Sheets sur Google Drive ne sera pas supprimé et pourra être retrouvé ultérieurement.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="pt-2 flex items-center justify-end gap-3">
+                    <button @click="databaseToDelete = null"
+                            class="px-4 py-2 rounded-lg text-sm font-medium text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 cursor-pointer">
+                        Annuler
+                    </button>
+                    <button @click="confirmDeleteDatabase"
+                            class="px-4 py-2 rounded-lg text-sm font-medium text-white bg-red-600 hover:bg-red-700 shadow-xs cursor-pointer">
+                        Supprimer de ma liste
+                    </button>
+                </div>
+            </div>
+        </div>
+    </transition>
+
+    <!-- =====================================================================
+         TOAST NOTIFICATION
+    ====================================================================== -->
+    <transition name="fade">
+        <div v-if="toastMessage"
+             class="fixed bottom-5 right-5 z-50 flex items-center gap-3 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-lg border border-slate-700 max-w-sm text-sm">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 shrink-0"></span>
+            <span>{{ toastMessage }}</span>
+        </div>
+    </transition>
+
+</div>
+
+<script>
+    const { createApp, ref, computed } = Vue;
+
+    createApp({
+        setup() {
+            // Global App State
+            const currentUser = ref('user@banquealimentaire.org');
+            const currentRoute = ref('databases');
+            const isMobileMenuOpen = ref(false);
+            const toastMessage = ref('');
+            let toastTimer = null;
+
+            // Sidebar Navigation Items
+            const navItems = computed(() => [
+                { id: 'databases', label: 'Gestion des bases de données' },
+                { id: 'structures', label: 'Profils de structures' },
+                { id: 'assoconnect', label: 'AssoConnect', badge: anomalies.value.length || null },
+                { id: 'admin', label: 'Administration' }
+            ]);
+
+            // Pre-populated Regional Databases
+            const databases = ref([
+                {
+                    id: 1,
+                    name: 'BA13',
+                    key: 'ba13',
+                    region: 'Banque Alimentaire des Bouches-du-Rhône',
+                    fileId: '1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms'
+                },
+                {
+                    id: 2,
+                    name: 'BA69',
+                    key: 'ba69',
+                    region: 'Banque Alimentaire du Rhône',
+                    fileId: '19xK7pL2mN8vQrT4wXyZ0aBcDeFgHiJkLmNoPqRsTuVw'
+                },
+                {
+                    id: 3,
+                    name: 'BA31',
+                    key: 'ba31',
+                    region: 'Banque Alimentaire de Toulouse et de la Haute-Garonne',
+                    fileId: '1mNbVcXzLkJhGfDsApOiUyTrEwQ9876543210aBcDeFg'
+                },
+                {
+                    id: 4,
+                    name: 'BA75',
+                    key: 'ba75',
+                    region: 'Banque Alimentaire de Paris - Île-de-France',
+                    fileId: '1zYxWvUtSrQpOnMlKjIhGfEdCbA1234567890ZyXwVuT'
+                }
+            ]);
+
+            const activeDatabaseId = ref(1); // BA13 active by default
+
+            const activeDatabase = computed(() => {
+                return databases.value.find(db => db.id === activeDatabaseId.value) || null;
+            });
+
+            // Actions & Helpers
+            function showToast(msg) {
+                toastMessage.value = msg;
+                if (toastTimer) clearTimeout(toastTimer);
+                toastTimer = setTimeout(() => {
+                    toastMessage.value = '';
+                }, 3500);
+            }
+
+            function selectRoute(routeId) {
+                currentRoute.value = routeId;
+                isMobileMenuOpen.value = false;
+            }
+
+            function setActiveDatabase(id) {
+                activeDatabaseId.value = id;
+                const selected = databases.value.find(d => d.id === id);
+                if (selected) {
+                    showToast(`Base de données active définie sur : ${selected.name}`);
+                }
+            }
+
+            function openExternalSheet(db) {
+                showToast(`Ouverture de Google Sheets (${db.name}) dans un nouvel onglet...`);
+            }
+
+            function copyFileId(fileId) {
+                // Uses textarea fallback compatible with iframe environments
+                const textarea = document.createElement('textarea');
+                textarea.value = fileId;
+                textarea.style.position = 'fixed';
+                textarea.style.opacity = '0';
+                document.body.appendChild(textarea);
+                textarea.select();
+                try {
+                    document.execCommand('copy');
+                    showToast('Identifiant du fichier copié dans le presse-papiers.');
+                } catch (err) {
+                    showToast('Impossible de copier l\'identifiant.');
+                }
+                document.body.removeChild(textarea);
+            }
+
+            // Scan Google Drive Simulation
+            const isScanning = ref(false);
+            const discoveredPool = [
+                {
+                    name: 'BA59',
+                    key: 'ba59',
+                    region: 'Banque Alimentaire du Nord',
+                    fileId: '1qAzWsXeDcRfVtGbYhNuJmIkOlP0987654321mNbVcXz'
+                },
+                {
+                    name: 'BA44',
+                    key: 'ba44',
+                    region: 'Banque Alimentaire de Loire-Atlantique',
+                    fileId: '1pOiUyTrEwQaSdFgHjKlZxCvBnM5647382910qWeRtYu'
+                }
+            ];
+
+            function scanAvailableDatabases() {
+                isScanning.value = true;
+                setTimeout(() => {
+                    isScanning.value = false;
+                    const nextCandidate = discoveredPool.find(
+                        cand => !databases.value.some(existing => existing.key === cand.key)
+                    );
+                    if (nextCandidate) {
+                        databases.value.push({
+                            id: Date.now(),
+                            ...nextCandidate
+                        });
+                        showToast(`Nouvelle base détectée sur Drive : ${nextCandidate.name} (${nextCandidate.key})`);
+                    } else {
+                        showToast('Analyse terminée : toutes les bases accessibles sont déjà listées.');
+                    }
+                }, 900);
+            }
+
+            // Create Database Modal
+            const isCreateModalOpen = ref(false);
+            const newDbForm = ref({ name: '', key: '', region: '' });
+
+            function openCreateModal() {
+                newDbForm.value = { name: '', key: '', region: '' };
+                isCreateModalOpen.value = true;
+            }
+
+            function autoGenerateKey() {
+                newDbForm.value.key = newDbForm.value.name
+                    .toLowerCase()
+                    .replace(/[^a-z0-9]/g, '');
+            }
+
+            function generateMockDriveId() {
+                const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+                let res = '1';
+                for (let i = 0; i < 43; i++) {
+                    res += chars.charAt(Math.floor(Math.random() * chars.length));
+                }
+                return res;
+            }
+
+            function createDatabase() {
+                if (!newDbForm.value.name || !newDbForm.value.key) return;
+                const created = {
+                    id: Date.now(),
+                    name: newDbForm.value.name,
+                    key: newDbForm.value.key,
+                    region: newDbForm.value.region || `Antenne régionale ${newDbForm.value.name}`,
+                    fileId: generateMockDriveId()
+                };
+                databases.value.push(created);
+                isCreateModalOpen.value = false;
+                showToast(`Base de données « ${created.name} » créée et initialisée.`);
+            }
+
+            // Delete Database Confirmation
+            const databaseToDelete = ref(null);
+
+            function promptDeleteDatabase(db) {
+                databaseToDelete.value = db;
+            }
+
+            function confirmDeleteDatabase() {
+                if (!databaseToDelete.value) return;
+                const removed = databaseToDelete.value;
+                databases.value = databases.value.filter(d => d.id !== removed.id);
+                if (activeDatabaseId.value === removed.id) {
+                    activeDatabaseId.value = databases.value.length > 0 ? databases.value[0].id : null;
+                }
+                databaseToDelete.value = null;
+                showToast(`La base « ${removed.name} » a été supprimée de votre liste.`);
+            }
+
+            // Secondary Views Mock Data
+            const isProvisioning = ref(false);
+            const structures = ref([
+                {
+                    vif: '00142',
+                    name: 'Épicerie Solidaire La Passerelle',
+                    car: 'CAR Marseille Nord',
+                    driveReady: true,
+                    aliases: ['La Passerelle 13', 'Asso Passerelle Nord']
+                },
+                {
+                    vif: '00289',
+                    name: 'Secours Populaire — Antenne Aix',
+                    car: 'CAR Aix-Pays d\'Aix',
+                    driveReady: true,
+                    aliases: ['SPF Aix', 'Secours Pop Aix']
+                },
+                {
+                    vif: '00415',
+                    name: 'Entraide Camarguaise',
+                    car: 'CAR Arles-Camargue',
+                    driveReady: false,
+                    aliases: ['Entraide Arles']
+                }
+            ]);
+
+            function provisionDriveFolders() {
+                isProvisioning.value = true;
+                setTimeout(() => {
+                    structures.value.forEach(s => s.driveReady = true);
+                    isProvisioning.value = false;
+                    showToast('Tous les dossiers Google Drive des structures ont été provisionnés.');
+                }, 800);
+            }
+
+            const selectedCar = ref('ALL');
+            const anomalies = ref([
+                {
+                    id: 101,
+                    structure: 'Épicerie Solidaire La Passerelle',
+                    car: 'CAR Marseille Nord',
+                    issue: 'Zéro initial manquant (Code VIF)',
+                    detail: '142 → attendu : 00142'
+                },
+                {
+                    id: 102,
+                    structure: 'Association Saint-Vincent Arles',
+                    car: 'CAR Arles-Camargue',
+                    issue: 'Structure non mappée',
+                    detail: 'ID AssoConnect #88412 introuvable'
+                }
+            ]);
+
+            const filteredAnomalies = computed(() => {
+                if (selectedCar.value === 'ALL') return anomalies.value;
+                return anomalies.value.filter(a => a.car === selectedCar.value);
+            });
+
+            function resolveAnomaly(id) {
+                anomalies.value = anomalies.value.filter(a => a.id !== id);
+                showToast('Anomalie corrigée et synchronisée.');
+            }
+
+            return {
+                currentUser,
+                currentRoute,
+                isMobileMenuOpen,
+                navItems,
+                databases,
+                activeDatabaseId,
+                activeDatabase,
+                isScanning,
+                isCreateModalOpen,
+                newDbForm,
+                databaseToDelete,
+                toastMessage,
+                structures,
+                isProvisioning,
+                selectedCar,
+                filteredAnomalies,
+                selectRoute,
+                setActiveDatabase,
+                openExternalSheet,
+                copyFileId,
+                scanAvailableDatabases,
+                openCreateModal,
+                autoGenerateKey,
+                createDatabase,
+                promptDeleteDatabase,
+                confirmDeleteDatabase,
+                provisionDriveFolders,
+                resolveAnomaly,
+                showToast
+            };
+        }
+    }).mount('#app');
+</script>
+
+</body>
+</html>
