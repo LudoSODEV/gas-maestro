@@ -96,12 +96,10 @@ Databases are saved per user as a JSON array string under the property key `MAES
 [
   {
     "dbKey": "ba13",
-    "dbName": "BA13",
     "spreadsheetId": "1aB2c3D4e5F6g7H8i9J0_example_id_1"
   },
   {
     "dbKey": "ba83",
-    "dbName": "BA83",
     "spreadsheetId": "9zY8x7W6v5U4t3S2r1Q0_example_id_2"
   }
 ]
@@ -116,17 +114,10 @@ function getUserDbs() {
   return rawData ? JSON.parse(rawData) : [];
 }
 
-function saveDb(dbKey, dbName, spreadsheetId) {
-  const dbs = getUserDbs();
-  const index = dbs.findIndex(d => d.dbKey === dbKey);
-  
-  if (index > -1) {
-    dbs[index] = { dbKey, dbName, spreadsheetId };
-  } else {
-    dbs.push({ dbKey, dbName, spreadsheetId });
-  }
-  
-  PropertiesService.getUserProperties().setProperty('MAESTRO_DATABASES', JSON.stringify(dbs));
+function saveUserDbs(dbs) {
+  const props = PropertiesService.getUserProperties();
+  props.setProperty('MAESTRO_DATABASES', JSON.stringify(dbs));
+  return { success: true };
 }
 ```
 
@@ -174,31 +165,41 @@ function applySoftProtections(spreadsheetId) {
 ### 4.5 Database Creation & Automatic Discovery (`DbDiscovery.gs`)
 
 ```javascript
-function createAndTagDb(dbKey, dbName) {
-  const ss = SpreadsheetApp.create(`Maestro DB ${dbKey}`);
+function createDb(dbKey) {
+  const normalizedDbKey = dbKey.toLowerCase();
+  const ss = SpreadsheetApp.create(`Maestro DB ${normalizedDbKey}`);
   const spreadsheetId = ss.getId();
   
-  // Tag the spreadsheet file with a custom Drive property so it can be automatically discovered
-  // Note: Because there is no centralized authority that manages databases and each user is fully
-  // in control of their data, there is no guarantee of uniqueness for MAESTRO_DATABASE_KEY.
-  Drive.Properties.insert({
-    key: 'MAESTRO_DATABASE_KEY',
-    value: dbKey,
-    visibility: 'PUBLIC'
+  // Tag the spreadsheet file with a custom Drive property using Drive API v3
+  Drive.Files.update({
+    properties: {
+      MAESTRO_DATABASE_KEY: normalizedDbKey
+    }
   }, spreadsheetId);
   
   applySoftProtections(spreadsheetId);
-  return spreadsheetId;
+  return {
+    dbKey: normalizedDbKey,
+    spreadsheetId: spreadsheetId
+  };
 }
 
-function discoverUserDbs() {
-  // Search for files tagged with the database property that the user has access to
-  const query = "properties has { key='MAESTRO_DATABASE_KEY' and visibility='PUBLIC' } and trashed = false";
-  const files = Drive.Files.list({ q: query });
+function listAccessibleDbs() {
+  const query = "properties has { key='MAESTRO_DATABASE_KEY' } and trashed = false";
+  const result = Drive.Files.list({ q: query });
+  const dbs = [];
   
-  return files.items.map(item => ({
-    spreadsheetId: item.id,
-    title: item.title
-  }));
+  if (result && result.files) {
+    result.files.forEach(item => {
+      if (item.properties && item.properties.MAESTRO_DATABASE_KEY) {
+        dbs.push({
+          dbKey: item.properties.MAESTRO_DATABASE_KEY.toLowerCase(),
+          spreadsheetId: item.id
+        });
+      }
+    });
+  }
+  
+  return dbs;
 }
 ```

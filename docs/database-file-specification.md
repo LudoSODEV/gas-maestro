@@ -26,7 +26,7 @@ A DB file in **Maestro** is a dedicated Google Sheet acting as the primary local
 
 ### 2. Sheet Structure & Initial State
 - **Empty DB State**: An empty DB consists of a single sheet named `Parameters`.
-- **Parameters Sheet**: Features two columns serving to store key/value pairs. By default, key/value pairs for `dbKey` and `dbName` are set at creation time.
+- **Parameters Sheet**: Features two columns serving to store key/value pairs. By default, the key/value pair for `dbKey` is set at creation time.
 
 ### 3. Permissions & Security Model
 - **Ownership & Access**: Created and owned by/accessible to the branch user within their Google Workspace boundary. The developer/app author has zero access.
@@ -38,7 +38,6 @@ A DB file in **Maestro** is a dedicated Google Sheet acting as the primary local
   [
     {
       "dbKey": "ba13",
-      "dbName": "BA13",
       "spreadsheetId": "1aB2c3D4e5F6g7H8i9J0_example_id"
     }
   ]
