@@ -1,0 +1,15 @@
+{
+	"compilerOptions": {
+		"target": "es2022",
+		"module": "none",
+		"lib": ["es2022"],
+		"strict": true,
+		"noImplicitAny": true,
+		"types": ["google-apps-script"],
+		"skipLibCheck": true,
+		"noEmitOnError": true,
+		"ignoreDeprecations": "6.0"
+	},
+	"include": ["src/**/*.ts"],
+	"exclude": ["node_modules", "dist", "frontend"]
+}

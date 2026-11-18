@@ -3,20 +3,20 @@
  * Handles web app routing, user properties management, and database automation.
  */
 Maestro.Webapp = {
-	doGet(e)
+	doGet(e: any)
 	{
 		const params = e && e.parameter ? e.parameter : {};
 		const template = HtmlService.createTemplateFromFile('index');
 		
-		template.initialParams = JSON.stringify(params);
-		template.deploymentUrl = ScriptApp.getService().getUrl();
+		(template as any).initialParams = JSON.stringify(params);
+		(template as any).deploymentUrl = ScriptApp.getService().getUrl();
 		
 		return template.evaluate()
 			.setTitle('Maestro - Centre de Contrôle')
 			.setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 	},
 
-	getUserDbs()
+	getUserDbs(): Array<{ dbKey: string; spreadsheetId: string }>
 	{
 		const props = PropertiesService.getUserProperties();
 		const rawData = props.getProperty('MAESTRO_DATABASES');
@@ -29,7 +29,7 @@ Maestro.Webapp = {
 		return [];
 	},
 
-	saveUserDbs(dbs)
+	saveUserDbs(dbs: Array<{ dbKey: string; spreadsheetId: string }>)
 	{
 		const props = PropertiesService.getUserProperties();
 		props.setProperty('MAESTRO_DATABASES', JSON.stringify(dbs));
@@ -49,7 +49,7 @@ Maestro.Webapp = {
 	getOrCreateAutoDb()
 	{
 		const email = Session.getActiveUser().getEmail() || '';
-		const match = email.match (/^(ba[0-9]+)\./i);
+		const match = email.match(/^(ba[0-9]+)\./i);
 		
 		if (!match)
 		{
@@ -59,7 +59,7 @@ Maestro.Webapp = {
 		const dbKey = match[1].toLowerCase();
 		
 		const dbs = Maestro.Webapp.getUserDbs();
-		let db = dbs.find(d => d.dbKey === dbKey);
+		let db = dbs.find((d: { dbKey: string }) => d.dbKey === dbKey);
 		
 		if (db)
 		{
@@ -70,7 +70,7 @@ Maestro.Webapp = {
 		db = Maestro.DbManager.findDbByKey(dbKey);
 		if (db)
 		{
-			if (!dbs.some(d => d.dbKey === dbKey))
+			if (!dbs.some((d: { dbKey: string }) => d.dbKey === dbKey))
 			{
 				dbs.push(db);
 				Maestro.Webapp.saveUserDbs(dbs);
@@ -79,7 +79,7 @@ Maestro.Webapp = {
 		}
 		
 		db = Maestro.DbManager.createDb(dbKey);
-		if (!dbs.some(d => d.dbKey === dbKey))
+		if (!dbs.some((d: { dbKey: string }) => d.dbKey === dbKey))
 		{
 			dbs.push(db);
 			Maestro.Webapp.saveUserDbs(dbs);

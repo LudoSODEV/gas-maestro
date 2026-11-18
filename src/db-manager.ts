@@ -4,7 +4,7 @@
  */
 Maestro.DbManager = class DbManager
 {
-	static createDb(dbKey)
+	static createDb(dbKey: string)
 	{
 		const normalizedDbKey = dbKey.toLowerCase();
 		
@@ -12,7 +12,7 @@ Maestro.DbManager = class DbManager
 		const spreadsheetId = ss.getId();
 		
 		// Tag file with MAESTRO_DATABASE_KEY custom property using Drive API v3
-		Drive.Files.update({
+		(Drive as any).Files.update({
 			properties: {
 				MAESTRO_DATABASE_KEY: normalizedDbKey
 			}
@@ -20,7 +20,7 @@ Maestro.DbManager = class DbManager
 		
 		// Initialize Parameters sheet
 		const sheets = ss.getSheets();
-		let parametersSheet;
+		let parametersSheet: GoogleAppsScript.Spreadsheet.Sheet;
 		
 		if (sheets.length > 0)
 		{
@@ -54,18 +54,18 @@ Maestro.DbManager = class DbManager
 		};
 	}
 
-	static findDbByKey(dbKey)
+	static findDbByKey(dbKey: string)
 	{
 		const normalizedDbKey = dbKey.toLowerCase();
 		const query = "properties has { key='MAESTRO_DATABASE_KEY' and value='" + normalizedDbKey + "' } and trashed = false";
-		const result = Drive.Files.list({ q: query });
+		const result = (Drive as any).Files.list({ q: query });
 		
 		if (result && result.files && result.files.length > 0)
 		{
 			const fileItem = result.files[0];
 			return {
 				dbKey: normalizedDbKey,
-				spreadsheetId: fileItem.id
+				spreadsheetId: fileItem.id!
 			};
 		}
 		
@@ -75,18 +75,18 @@ Maestro.DbManager = class DbManager
 	static listAccessibleDbs()
 	{
 		const query = "properties has { key='MAESTRO_DATABASE_KEY' } and trashed = false";
-		const result = Drive.Files.list({ q: query });
-		const dbs = [];
+		const result = (Drive as any).Files.list({ q: query });
+		const dbs: Array<{ dbKey: string; spreadsheetId: string }> = [];
 		
 		if (result && result.files)
 		{
-			result.files.forEach(item =>
+			result.files.forEach((item: any) =>
 			{
-				if (item.properties && item.properties.MAESTRO_DATABASE_KEY)
+				if (item.properties && item.properties['MAESTRO_DATABASE_KEY'])
 				{
 					dbs.push({
-						dbKey: item.properties.MAESTRO_DATABASE_KEY.toLowerCase(),
-						spreadsheetId: item.id
+						dbKey: item.properties['MAESTRO_DATABASE_KEY'].toLowerCase(),
+						spreadsheetId: item.id!
 					});
 				}
 			});
@@ -95,7 +95,7 @@ Maestro.DbManager = class DbManager
 		return dbs;
 	}
 
-	static getOrCreateDb(dbKey)
+	static getOrCreateDb(dbKey: string)
 	{
 		let db = Maestro.DbManager.findDbByKey(dbKey);
 		

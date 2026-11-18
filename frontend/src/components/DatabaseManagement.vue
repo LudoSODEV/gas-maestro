@@ -41,14 +41,20 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import { ref, onMounted } from 'vue'
+
+interface DatabaseItem {
+	dbKey: string;
+	dbName?: string;
+	spreadsheetId: string;
+}
 
 export default {
 	name: 'DatabaseManagement',
 	setup()
 	{
-		const dbs = ref([])
+		const dbs = ref<DatabaseItem[]>([])
 		const loading = ref(true)
 		const statusMessage = ref('')
 		const statusColor = ref('green')
@@ -58,13 +64,13 @@ export default {
 			loading.value = true
 			if (window.google?.script?.run)
 			{
-				google.script.run
-					.withSuccessHandler(data =>
+				window.google.script.run
+					.withSuccessHandler((data: DatabaseItem[]) =>
 					{
 						dbs.value = data
 						loading.value = false
 					})
-					.withFailureHandler(err =>
+					.withFailureHandler((err: any) =>
 					{
 						statusMessage.value = 'Erreur lors du chargement: ' + err.message
 						statusColor.value = 'red'
@@ -82,7 +88,7 @@ export default {
 			}
 		}
 
-		const removeDb = (index) =>
+		const removeDb = (index: number) =>
 		{
 			dbs.value.splice(index, 1)
 		}
@@ -93,13 +99,13 @@ export default {
 			statusColor.value = 'blue'
 			if (window.google?.script?.run)
 			{
-				google.script.run
+				window.google.script.run
 					.withSuccessHandler(() =>
 					{
 						statusMessage.value = 'Modifications enregistrées avec succès !'
 						statusColor.value = 'green'
 					})
-					.withFailureHandler(err =>
+					.withFailureHandler((err: any) =>
 					{
 						statusMessage.value = 'Erreur lors de l\'enregistrement: ' + err.message
 						statusColor.value = 'red'
@@ -123,17 +129,17 @@ export default {
 
 			if (window.google?.script?.run)
 			{
-				google.script.run
-					.withSuccessHandler(newDb =>
+				window.google.script.run
+					.withSuccessHandler((newDb: DatabaseItem) =>
 					{
-						if (!dbs.value.some(d => d.dbKey === newDb.dbKey))
+						if (!dbs.value.some((d: DatabaseItem) => d.dbKey === newDb.dbKey))
 						{
 							dbs.value.push(newDb)
 						}
 						statusMessage.value = 'Base de données générée et synchronisée avec succès !'
 						statusColor.value = 'green'
 					})
-					.withFailureHandler(err =>
+					.withFailureHandler((err: any) =>
 					{
 						statusMessage.value = 'Erreur lors de la génération automatique: ' + err.message
 						statusColor.value = 'red'
@@ -144,8 +150,8 @@ export default {
 			{
 				setTimeout(() =>
 				{
-					const mockDb = { dbKey: 'ba13', dbName: 'BA13', spreadsheetId: 'mock-auto-id' }
-					if (!dbs.value.some(d => d.dbKey === mockDb.dbKey))
+					const mockDb: DatabaseItem = { dbKey: 'ba13', dbName: 'BA13', spreadsheetId: 'mock-auto-id' }
+					if (!dbs.value.some((d: DatabaseItem) => d.dbKey === mockDb.dbKey))
 					{
 						dbs.value.push(mockDb)
 					}

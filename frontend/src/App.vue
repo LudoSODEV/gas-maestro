@@ -139,7 +139,7 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import DatabaseManagement from './components/DatabaseManagement.vue'
 import StructureProfiles from './components/StructureProfiles.vue'
@@ -163,7 +163,7 @@ export default {
 
 		const currentTool = ref('gestion-dbs')
 
-		const toolComponentMap = {
+		const toolComponentMap: Record<string, any> = {
 			'gestion-dbs': DatabaseManagement,
 			'profils-structures': StructureProfiles,
 			'assoconnect': AssoConnect,
@@ -185,8 +185,8 @@ export default {
 		{
 			if (window.google?.script?.run)
 			{
-				google.script.run
-					.withSuccessHandler(email =>
+				window.google.script.run
+					.withSuccessHandler((email: string) =>
 					{
 						currentUserEmail.value = email
 					})
@@ -196,8 +196,8 @@ export default {
 					})
 					.Maestro_getCurrentUserEmail()
 
-				google.script.run
-					.withSuccessHandler(dbs =>
+				window.google.script.run
+					.withSuccessHandler((dbs: any) =>
 					{
 						if (Array.isArray(dbs) && dbs.length > 0)
 						{
@@ -214,7 +214,7 @@ export default {
 			}
 		}
 
-		const applyState = (toolId) =>
+		const applyState = (toolId: string) =>
 		{
 			if (toolComponentMap[toolId])
 			{
@@ -222,7 +222,7 @@ export default {
 			}
 		}
 
-		const updateHistory = (toolId, isReplace = false) =>
+		const updateHistory = (toolId: string, isReplace: boolean = false) =>
 		{
 			const stateObject = { tool: toolId }
 			const queryParams = { tool: toolId }
@@ -231,11 +231,11 @@ export default {
 			{
 				if (isReplace)
 				{
-					google.script.history.replace(stateObject, queryParams, '')
+					window.google.script.history.replace(stateObject, queryParams, '')
 				}
 				else
 				{
-					google.script.history.push(stateObject, queryParams, '')
+					window.google.script.history.push(stateObject, queryParams, '')
 				}
 			}
 			else
@@ -254,14 +254,14 @@ export default {
 			}
 		}
 
-		const selectRoute = (toolId) =>
+		const selectRoute = (toolId: string) =>
 		{
 			applyState(toolId)
 			updateHistory(toolId, false)
 			isMobileMenuOpen.value = false
 		}
 
-		const handlePopState = (e) =>
+		const handlePopState = (e: any) =>
 		{
 			if (e && e.state && e.state.tool)
 			{
@@ -308,7 +308,7 @@ export default {
 
 			if (window.google?.script?.history)
 			{
-				google.script.history.setChangeHandler((e) =>
+				window.google.script.history.setChangeHandler((e: any) =>
 				{
 					const params = e.location?.parameters || {}
 					const tool = params.tool || 'gestion-dbs'

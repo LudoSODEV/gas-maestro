@@ -5,8 +5,10 @@
 	"main": "index.js",
 	"scripts": {
 		"dev": "vite frontend",
-		"build:frontend": "vite build && node -e \"const fs = require('fs'); fs.copyFileSync('dist-frontend/index.html', 'src/index.html');\"",
-		"push": "npm run build:frontend && clasp push",
+		"build:backend": "tsc",
+		"build:frontend": "vue-tsc -p frontend/tsconfig.json --noEmit && vite build && node -e \"const fs = require('fs'); fs.copyFileSync('dist-frontend/index.html', 'src/index.html');\"",
+		"build": "npm run build:backend && npm run build:frontend",
+		"push": "npm run build && clasp push",
 		"test": "echo \"Error: no test specified\" && exit 1"
 	},
 	"keywords": [],
@@ -17,8 +19,11 @@
 	},
 	"devDependencies": {
 		"@mermaid-js/mermaid-cli": "^12.0.0",
+		"@types/google-apps-script": "^2.0.15",
 		"@vitejs/plugin-vue": "^5.2.1",
+		"typescript": "^6.0.3",
 		"vite": "^6.0.0",
-		"vite-plugin-singlefile": "^2.2.0"
+		"vite-plugin-singlefile": "^2.2.0",
+		"vue-tsc": "^3.3.14"
 	}
 }

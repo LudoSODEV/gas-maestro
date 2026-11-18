@@ -11,7 +11,7 @@ Maestro.FileSniffers.FileSniffer = class FileSniffer
 	 * @param {GoogleAppsScript.Drive.File} file - The file to inspect.
 	 * @returns {string[]} Array of available action identifiers or descriptions.
 	 */
-	getAvailableActions(file)
+	getAvailableActions(file: GoogleAppsScript.Drive.File): string[]
 	{
 		throw new Error('Method getAvailableActions() must be implemented by concrete file sniffers.');
 	}

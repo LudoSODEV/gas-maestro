@@ -12,7 +12,7 @@ Maestro.FileSniffers.AssoConnectFileSniffer = class AssoConnectFileSniffer exten
 	 * @param {GoogleAppsScript.Drive.File} file - The file to inspect.
 	 * @returns {string[]} Array of stubbed actions.
 	 */
-	getAvailableActions(file)
+	getAvailableActions(file: GoogleAppsScript.Drive.File): string[]
 	{
 		// Stub implementation for AssoConnect file sniffer
 		return [
