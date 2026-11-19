@@ -1,36 +1,47 @@
-/**
- * _Maestro.ts
- * Alphabetically first file evaluated by Google Apps Script.
- * Declares the single global namespace object: const Maestro = {};
- */
-const Maestro: any = {};
+import { DbManager } from './db-manager';
+import { Webapp } from './webapp';
+import { FileSniffer } from './file-sniffers/file-sniffer';
+import { AssoConnectFileSniffer } from './file-sniffers/asso-connect-file-sniffer';
+
+declare const global: any;
+
+const Maestro = {
+	DbManager,
+	Webapp,
+	FileSniffers: {
+		FileSniffer,
+		AssoConnectFileSniffer
+	}
+};
+
+(global as any).Maestro = Maestro;
 
 function doGet(e: GoogleAppsScript.Events.AppsScriptEvent)
 {
-	return Maestro.Webapp.doGet(e);
+	return Webapp.doGet(e);
 }
 
 function Maestro_getUserDbs()
 {
-	return Maestro.Webapp.getUserDbs();
+	return Webapp.getUserDbs();
 }
 
 function Maestro_saveUserDbs(dbs: any)
 {
-	return Maestro.Webapp.saveUserDbs(dbs);
+	return Webapp.saveUserDbs(dbs);
 }
 
 function Maestro_getCurrentUserEmail()
 {
-	return Maestro.Webapp.getCurrentUserEmail();
+	return Webapp.getCurrentUserEmail();
 }
 
 function Maestro_listAccessibleDbs()
 {
-	return Maestro.Webapp.listAccessibleDbs();
+	return Webapp.listAccessibleDbs();
 }
 
 function Maestro_getOrCreateAutoDb()
 {
-	return Maestro.Webapp.getOrCreateAutoDb();
+	return Webapp.getOrCreateAutoDb();
 }

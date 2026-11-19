@@ -1,8 +1,6 @@
-/**
- * Webapp module
- * Handles web app routing, user properties management, and database automation.
- */
-Maestro.Webapp = {
+import { DbManager } from './db-manager';
+
+export const Webapp = {
 	doGet(e: any)
 	{
 		const params = e && e.parameter ? e.parameter : {};
@@ -43,7 +41,7 @@ Maestro.Webapp = {
 
 	listAccessibleDbs()
 	{
-		return Maestro.DbManager.listAccessibleDbs();
+		return DbManager.listAccessibleDbs();
 	},
 
 	getOrCreateAutoDb()
@@ -58,7 +56,7 @@ Maestro.Webapp = {
 		
 		const dbKey = match[1].toLowerCase();
 		
-		const dbs = Maestro.Webapp.getUserDbs();
+		const dbs = Webapp.getUserDbs();
 		let db = dbs.find((d: { dbKey: string }) => d.dbKey === dbKey);
 		
 		if (db)
@@ -66,23 +64,22 @@ Maestro.Webapp = {
 			return db;
 		}
 		
-		// Search Google Drive for existing database using custom property exclusively (no fallback)
-		db = Maestro.DbManager.findDbByKey(dbKey);
+		db = DbManager.findDbByKey(dbKey);
 		if (db)
 		{
 			if (!dbs.some((d: { dbKey: string }) => d.dbKey === dbKey))
 			{
 				dbs.push(db);
-				Maestro.Webapp.saveUserDbs(dbs);
+				Webapp.saveUserDbs(dbs);
 			}
 			return db;
 		}
 		
-		db = Maestro.DbManager.createDb(dbKey);
+		db = DbManager.createDb(dbKey);
 		if (!dbs.some((d: { dbKey: string }) => d.dbKey === dbKey))
 		{
 			dbs.push(db);
-			Maestro.Webapp.saveUserDbs(dbs);
+			Webapp.saveUserDbs(dbs);
 		}
 		
 		return db;

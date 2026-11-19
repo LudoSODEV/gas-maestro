@@ -1,8 +1,4 @@
-/**
- * DbManager class
- * Handles creation and management of Database Google Sheets.
- */
-Maestro.DbManager = class DbManager
+export class DbManager
 {
 	static createDb(dbKey: string)
 	{
@@ -11,14 +7,12 @@ Maestro.DbManager = class DbManager
 		const ss = SpreadsheetApp.create('Maestro DB ' + normalizedDbKey);
 		const spreadsheetId = ss.getId();
 		
-		// Tag file with MAESTRO_DATABASE_KEY custom property using Drive API v3
 		(Drive as any).Files.update({
 			properties: {
 				MAESTRO_DATABASE_KEY: normalizedDbKey
 			}
 		}, spreadsheetId);
 		
-		// Initialize Parameters sheet
 		const sheets = ss.getSheets();
 		let parametersSheet: GoogleAppsScript.Spreadsheet.Sheet;
 		
@@ -36,11 +30,9 @@ Maestro.DbManager = class DbManager
 		parametersSheet.appendRow(['Key', 'Value']);
 		parametersSheet.appendRow(['dbKey', normalizedDbKey]);
 		
-		// Format Parameters sheet header
 		const headerRange = parametersSheet.getRange(1, 1, 1, 2);
 		headerRange.setFontWeight('bold');
 		
-		// Apply soft protections to all sheets
 		const allSheets = ss.getSheets();
 		allSheets.forEach(sheet =>
 		{
@@ -97,13 +89,13 @@ Maestro.DbManager = class DbManager
 
 	static getOrCreateDb(dbKey: string)
 	{
-		let db = Maestro.DbManager.findDbByKey(dbKey);
+		let db = DbManager.findDbByKey(dbKey);
 		
 		if (!db)
 		{
-			db = Maestro.DbManager.createDb(dbKey);
+			db = DbManager.createDb(dbKey);
 		}
 		
 		return db;
 	}
-};
+}
