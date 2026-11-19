@@ -72,10 +72,10 @@ gas-maestro/
 │   │   └── components/     # Feature components (Databases, Tools, etc.)
 │   └── package.json        # Frontend dependencies (Vue 3, Vite)
 ├── src/                    # GAS Backend & Bundled Output
-│   ├── _maestro.gs         # Root namespace
-│   ├── webapp.gs           # Request dispatcher (doGet / API)
-│   ├── db-manager.gs       # Backend data logic
-│   └── index.html          # Bundled Vue SPA output
+│   ├── Maestro.ts          # Root namespace and entry point
+│   ├── Webapp.ts           # Request dispatcher (doGet / API)
+│   ├── DbManager.ts        # Backend data logic
+│   └── index.html          # Bundled Vue SPA output (in `dist/`)
 └── package.json            # Root build & clasp scripts
 ```
 
