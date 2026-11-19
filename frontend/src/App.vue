@@ -22,7 +22,7 @@
 					</div>
 					<div>
 						<span class="text-white font-bold text-lg tracking-tight block leading-none">Maestro</span>
-						<span class="text-[11px] text-slate-400 font-medium tracking-wide uppercase">Banque Alimentaire</span>
+						<span class="text-[11px] text-slate-400 font-medium tracking-wide uppercase">Maestro</span>
 					</div>
 				</div>
 				<button @click="isMobileMenuOpen = false" 
