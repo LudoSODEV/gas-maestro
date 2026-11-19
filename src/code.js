@@ -153,4 +153,28 @@ var Maestro = {
     AssoConnectFileSniffer
   }
 };
-global.Maestro = Maestro;
+globalThis.Maestro = Maestro;
+function doGet(e) {
+  return Webapp.doGet(e);
+}
+function Maestro_getUserDbs() {
+  return Webapp.getUserDbs();
+}
+function Maestro_saveUserDbs(dbs) {
+  return Webapp.saveUserDbs(dbs);
+}
+function Maestro_getCurrentUserEmail() {
+  return Webapp.getCurrentUserEmail();
+}
+function Maestro_listAccessibleDbs() {
+  return Webapp.listAccessibleDbs();
+}
+function Maestro_getOrCreateAutoDb() {
+  return Webapp.getOrCreateAutoDb();
+}
+globalThis.doGet = doGet;
+globalThis.Maestro_getUserDbs = Maestro_getUserDbs;
+globalThis.Maestro_saveUserDbs = Maestro_saveUserDbs;
+globalThis.Maestro_getCurrentUserEmail = Maestro_getCurrentUserEmail;
+globalThis.Maestro_listAccessibleDbs = Maestro_listAccessibleDbs;
+globalThis.Maestro_getOrCreateAutoDb = Maestro_getOrCreateAutoDb;

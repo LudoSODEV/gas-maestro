@@ -3,8 +3,6 @@ import { Webapp } from './webapp';
 import { FileSniffer } from './file-sniffers/file-sniffer';
 import { AssoConnectFileSniffer } from './file-sniffers/asso-connect-file-sniffer';
 
-declare const global: any;
-
 const Maestro = {
 	DbManager,
 	Webapp,
@@ -14,7 +12,7 @@ const Maestro = {
 	}
 };
 
-(global as any).Maestro = Maestro;
+(globalThis as any).Maestro = Maestro;
 
 function doGet(e: GoogleAppsScript.Events.AppsScriptEvent)
 {
@@ -45,3 +43,11 @@ function Maestro_getOrCreateAutoDb()
 {
 	return Webapp.getOrCreateAutoDb();
 }
+
+// Expose entry points to globalThis for Google Apps Script execution
+(globalThis as any).doGet = doGet;
+(globalThis as any).Maestro_getUserDbs = Maestro_getUserDbs;
+(globalThis as any).Maestro_saveUserDbs = Maestro_saveUserDbs;
+(globalThis as any).Maestro_getCurrentUserEmail = Maestro_getCurrentUserEmail;
+(globalThis as any).Maestro_listAccessibleDbs = Maestro_listAccessibleDbs;
+(globalThis as any).Maestro_getOrCreateAutoDb = Maestro_getOrCreateAutoDb;
