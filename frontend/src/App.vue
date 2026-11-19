@@ -141,10 +141,10 @@
 
 <script lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import DatabaseManagement from './components/DatabaseManagement.vue'
-import StructureProfiles from './components/StructureProfiles.vue'
-import AssoConnect from './components/AssoConnect.vue'
-import Administration from './components/Administration.vue'
+import DatabaseManagement from './Components/DatabaseManagement.vue'
+import StructureProfiles from './Components/StructureProfiles.vue'
+import AssoConnect from './Components/AssoConnect.vue'
+import Administration from './Components/Administration.vue'
 
 export default {
 	name: 'App',

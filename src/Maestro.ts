@@ -1,7 +1,7 @@
-import { DbManager } from './db-manager';
-import { Webapp } from './webapp';
-import { FileSniffer } from './file-sniffers/file-sniffer';
-import { AssoConnectFileSniffer } from './file-sniffers/asso-connect-file-sniffer';
+import { DbManager } from './DbManager';
+import { Webapp } from './Webapp';
+import { FileSniffer } from './FileSniffers/FileSniffer';
+import { AssoConnectFileSniffer } from './FileSniffers/AssoConnectFileSniffer';
 
 const Maestro = {
 	DbManager,

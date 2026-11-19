@@ -1,4 +1,4 @@
-import { DbManager } from './db-manager';
+import { DbManager } from './DbManager';
 
 export const Webapp = {
 	doGet(e: any)

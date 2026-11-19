@@ -5,7 +5,7 @@
 	"main": "index.js",
 	"scripts": {
 		"dev": "vite frontend",
-		"build:backend": "esbuild src/_maestro.ts --bundle --platform=neutral --target=es2022 --outfile=dist/code.js",
+		"build:backend": "esbuild src/Maestro.ts --bundle --platform=neutral --target=es2022 --outfile=dist/code.js",
 		"build:frontend": "vue-tsc -p frontend/tsconfig.json --noEmit && vite build",
 		"build:manifest": "node -e \"const fs = require('fs'); fs.copyFileSync('src/appsscript.json', 'dist/appsscript.json');\"",
 		"build": "npm run build:frontend && npm run build:backend && npm run build:manifest",
