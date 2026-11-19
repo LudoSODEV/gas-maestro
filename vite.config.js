@@ -7,7 +7,7 @@ export default defineConfig({
 	root: resolve(__dirname, 'frontend'),
 	plugins: [vue(), viteSingleFile()],
 	build: {
-		outDir: resolve(__dirname, 'dist-frontend'),
+		outDir: resolve(__dirname, 'dist'),
 		emptyOutDir: true
 	}
 })

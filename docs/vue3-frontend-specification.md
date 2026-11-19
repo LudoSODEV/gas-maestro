@@ -91,7 +91,7 @@ export default defineConfig({
   root: resolve(__dirname, 'frontend'),
   plugins: [vue(), viteSingleFile()],
   build: {
-    outDir: resolve(__dirname, 'dist-frontend'),
+    outDir: resolve(__dirname, 'dist'),
     emptyOutDir: true
   }
 })
@@ -136,11 +136,11 @@ Standard HTML5 `history.pushState` fails to update the top-level browser address
    ```bash
    npm run dev
    ```
-2. **Build Frontend & Update GAS Template**:
+2. **Build Project**:
    ```bash
-   npm run build:frontend
+   npm run build
    ```
-   *(Builds Vue 3, inlines assets via `vite-plugin-singlefile`, and copies output to `src/index.html`)*
+   *(Builds Vue 3 single-file HTML, bundles TypeScript backend, and outputs to `dist/`)*
 3. **Deploy via Clasp**:
    ```bash
    npm run push
