@@ -87,15 +87,35 @@ export class DbManager
 		return dbs;
 	}
 
-	static getOrCreateDb(dbKey: string)
+	static getFileMetadata(spreadsheetId: string)
 	{
-		let db = DbManager.findDbByKey(dbKey);
-		
-		if (!db)
+		try
 		{
-			db = DbManager.createDb(dbKey);
+			const file = (Drive as any).Files.get(spreadsheetId);
+			return {
+				name: file.name || 'Sans titre',
+				trashed: file.trashed || false
+			};
 		}
-		
-		return db;
+		catch (e)
+		{
+			return {
+				name: 'Fichier introuvable ou accès refusé',
+				trashed: false
+			};
+		}
+	}
+
+	static trashDb(spreadsheetId: string)
+	{
+		try
+		{
+			(Drive as any).Files.update({ trashed: true }, spreadsheetId);
+			return { success: true };
+		}
+		catch (e: any)
+		{
+			throw new Error('Impossible de placer le fichier à la corbeille: ' + e.message);
+		}
 	}
 }

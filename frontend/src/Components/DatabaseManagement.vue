@@ -10,19 +10,32 @@
 				<thead>
 					<tr>
 						<th>Nom de la base (dbKey)</th>
-						<th>Nom de la Base</th>
+						<th>Nom Google Drive</th>
 						<th>Identifiant du fichier (Spreadsheet ID)</th>
 						<th>Actions</th>
 					</tr>
 				</thead>
 				<tbody>
 					<tr v-for="(db, index) in dbs" :key="index">
-						<td><input v-model="db.dbKey" type="text" readonly style="background: #e9ecef;" /></td>
-						<td><input v-model="db.dbName" type="text" readonly style="background: #e9ecef;" /></td>
-						<td><input v-model="db.spreadsheetId" type="text" style="width: 300px;" /></td>
 						<td>
-							<a v-if="db.spreadsheetId" :href="'https://docs.google.com/spreadsheets/d/' + db.spreadsheetId" target="_blank" class="btn-link">Ouvrir</a>
-							<button class="danger" @click="removeDb(index)">Supprimer</button>
+							<input v-model="db.dbKey" type="text" readonly style="background: #e9ecef;" />
+						</td>
+						<td>
+							<input v-model="db.name" type="text" readonly style="background: #e9ecef;" />
+						</td>
+						<td>
+							<input v-model="db.spreadsheetId" type="text" style="width: 250px;" />
+						</td>
+						<td>
+							<div class="actions-cell">
+								<a v-if="db.spreadsheetId && !db.spreadsheetId.startsWith('mock')" :href="'https://docs.google.com/spreadsheets/d/' + db.spreadsheetId" target="_blank" class="btn-link" title="Ouvrir le fichier">Ouvrir</a>
+								
+								<button v-if="dbs.length > 1 && db.dbKey !== activeDbKey" class="select-btn" @click="selectDb(db.dbKey)" title="Définir comme base active">Sélectionner</button>
+								<span v-else-if="db.dbKey === activeDbKey" class="active-badge">Active</span>
+
+								<button class="warning" @click="hideDb(index)" title="Cacher cette base de données de la liste">Cacher</button>
+								<button class="danger" @click="openDeleteDialog(db)" title="Supprimer définitivement le fichier">Supprimer</button>
+							</div>
 						</td>
 					</tr>
 					<tr v-if="dbs.length === 0">
@@ -38,6 +51,25 @@
 
 			<p v-if="statusMessage" class="status-msg" :style="{ color: statusColor }">{{ statusMessage }}</p>
 		</div>
+
+		<!-- Delete Explanation Dialog / Modal -->
+		<div v-if="showDeleteDialog" class="modal-overlay">
+			<div class="modal-card">
+				<h3>Suppression du document</h3>
+				<p>
+					Pour supprimer définitivement la base de données <strong>{{ dbToDelete?.dbKey }}</strong> ({{ dbToDelete?.name }}), vous pouvez :
+				</p>
+				<ol class="delete-instructions">
+					<li>Ouvrir le fichier Google Sheets et le placer manuellement dans la corbeille de Google Drive.</li>
+					<li>Ou utiliser le bouton ci-dessous pour placer automatiquement le fichier dans la corbeille via l'API Google Drive.</li>
+				</ol>
+				<div class="modal-actions">
+					<a v-if="dbToDelete?.spreadsheetId && !dbToDelete?.spreadsheetId.startsWith('mock')" :href="'https://docs.google.com/spreadsheets/d/' + dbToDelete.spreadsheetId" target="_blank" class="btn-link">Ouvrir le fichier</a>
+					<button class="danger" @click="confirmTrashDb">Mettre à la corbeille via l'API</button>
+					<button class="secondary" @click="closeDeleteDialog">Annuler</button>
+				</div>
+			</div>
+		</div>
 	</div>
 </template>
 
@@ -46,7 +78,7 @@ import { ref, onMounted } from 'vue'
 
 interface DatabaseItem {
 	dbKey: string;
-	dbName?: string;
+	name?: string;
 	spreadsheetId: string;
 }
 
@@ -55,9 +87,13 @@ export default {
 	setup()
 	{
 		const dbs = ref<DatabaseItem[]>([])
+		const activeDbKey = ref('ba13')
 		const loading = ref(true)
 		const statusMessage = ref('')
 		const statusColor = ref('green')
+
+		const showDeleteDialog = ref(false)
+		const dbToDelete = ref<DatabaseItem | null>(null)
 
 		const loadDbs = () =>
 		{
@@ -77,20 +113,114 @@ export default {
 						loading.value = false
 					})
 					.Maestro_getUserDbs()
+
+				window.google.script.run
+					.withSuccessHandler((activeKey: string) =>
+					{
+						if (activeKey)
+						{
+							activeDbKey.value = activeKey
+						}
+					})
+					.withFailureHandler(() => {})
+					.Maestro_getActiveDbKey()
 			}
 			else
 			{
 				// Local dev mock
 				dbs.value = [
-					{ dbKey: 'ba13', dbName: 'BA13', spreadsheetId: 'mock-spreadsheet-id-13' }
+					{ dbKey: 'ba13', name: 'Maestro DB BA13', spreadsheetId: 'mock-spreadsheet-id-13' },
+					{ dbKey: 'ba83', name: 'Maestro DB BA83', spreadsheetId: 'mock-spreadsheet-id-83' }
 				]
+				activeDbKey.value = 'ba13'
 				loading.value = false
 			}
 		}
 
-		const removeDb = (index: number) =>
+		const selectDb = (dbKey: string) =>
+		{
+			activeDbKey.value = dbKey
+			window.dispatchEvent(new CustomEvent('db-activated', { detail: dbKey }))
+
+			if (window.google?.script?.run)
+			{
+				window.google.script.run
+					.withSuccessHandler(() =>
+					{
+						statusMessage.value = `Base active définie sur : ${dbKey}`
+						statusColor.value = 'green'
+					})
+					.withFailureHandler((err: any) =>
+					{
+						statusMessage.value = 'Erreur lors de la sélection de la base: ' + err.message
+						statusColor.value = 'red'
+					})
+					.Maestro_setActiveDbKey(dbKey)
+			}
+			else
+			{
+				statusMessage.value = `Base active définie sur : ${dbKey} (Mode Local)`
+				statusColor.value = 'green'
+			}
+		}
+
+		const hideDb = (index: number) =>
 		{
 			dbs.value.splice(index, 1)
+			statusMessage.value = 'Base cachée de la liste. Pensez à enregistrer les modifications.'
+			statusColor.value = 'blue'
+		}
+
+		const openDeleteDialog = (db: DatabaseItem) =>
+		{
+			dbToDelete.value = db
+			showDeleteDialog.value = true
+		}
+
+		const closeDeleteDialog = () =>
+		{
+			showDeleteDialog.value = false
+			dbToDelete.value = null
+		}
+
+		const confirmTrashDb = () =>
+		{
+			if (!dbToDelete.value)
+			{
+				return
+			}
+
+			const target = dbToDelete.value
+			closeDeleteDialog()
+
+			statusMessage.value = 'Placement du fichier à la corbeille en cours...'
+			statusColor.value = 'blue'
+
+			if (window.google?.script?.run)
+			{
+				window.google.script.run
+					.withSuccessHandler(() =>
+					{
+						dbs.value = dbs.value.filter(d => d.spreadsheetId !== target.spreadsheetId && d.dbKey !== target.dbKey)
+						statusMessage.value = `Base ${target.dbKey} placée à la corbeille et supprimée de la liste.`
+						statusColor.value = 'green'
+					})
+					.withFailureHandler((err: any) =>
+					{
+						statusMessage.value = 'Erreur lors de la suppression: ' + err.message
+						statusColor.value = 'red'
+					})
+					.Maestro_trashDb(target.spreadsheetId, target.dbKey)
+			}
+			else
+			{
+				setTimeout(() =>
+				{
+					dbs.value = dbs.value.filter(d => d.spreadsheetId !== target.spreadsheetId && d.dbKey !== target.dbKey)
+					statusMessage.value = `Base ${target.dbKey} placée à la corbeille et supprimée de la liste. (Mode Local)`
+					statusColor.value = 'green'
+				}, 500)
+			}
 		}
 
 		const saveDbs = () =>
@@ -150,7 +280,7 @@ export default {
 			{
 				setTimeout(() =>
 				{
-					const mockDb: DatabaseItem = { dbKey: 'ba13', dbName: 'BA13', spreadsheetId: 'mock-auto-id' }
+					const mockDb: DatabaseItem = { dbKey: 'ba13', name: 'Maestro DB BA13', spreadsheetId: 'mock-auto-id' }
 					if (!dbs.value.some((d: DatabaseItem) => d.dbKey === mockDb.dbKey))
 					{
 						dbs.value.push(mockDb)
@@ -168,10 +298,17 @@ export default {
 
 		return {
 			dbs,
+			activeDbKey,
 			loading,
 			statusMessage,
 			statusColor,
-			removeDb,
+			showDeleteDialog,
+			dbToDelete,
+			selectDb,
+			hideDb,
+			openDeleteDialog,
+			closeDeleteDialog,
+			confirmTrashDb,
 			saveDbs,
 			autoGenerateDb
 		}
@@ -226,6 +363,13 @@ input {
 	box-sizing: border-box;
 }
 
+.actions-cell {
+	display: flex;
+	gap: 8px;
+	align-items: center;
+	flex-wrap: wrap;
+}
+
 .action-bar {
 	display: flex;
 	gap: 12px;
@@ -253,10 +397,33 @@ button.danger {
 	color: white;
 }
 
+button.warning {
+	background: #f2994a;
+	color: white;
+}
+
+.select-btn {
+	background: #34a853;
+	color: white;
+}
+
+.active-badge {
+	background: #e8f5e9;
+	color: #2e7d32;
+	padding: 6px 12px;
+	border-radius: 4px;
+	font-weight: 500;
+	font-size: 13px;
+}
+
+.secondary {
+	background: #f1f3f4;
+	color: #3c4043;
+}
+
 .btn-link {
 	background: #1a73e8;
 	color: white;
-	margin-right: 8px;
 }
 
 .loading {
@@ -268,5 +435,51 @@ button.danger {
 	margin-top: 16px;
 	font-weight: 500;
 	font-size: 14px;
+}
+
+.modal-overlay {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background: rgba(0, 0, 0, 0.5);
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	z-index: 1000;
+}
+
+.modal-card {
+	background: white;
+	padding: 24px;
+	border-radius: 8px;
+	width: 500px;
+	max-width: 90%;
+	box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.modal-card h3 {
+	margin-top: 0;
+	color: #d93025;
+}
+
+.delete-instructions {
+	margin: 16px 0;
+	padding-left: 20px;
+	color: #3c4043;
+	font-size: 14px;
+	line-height: 1.5;
+}
+
+.delete-instructions li {
+	margin-bottom: 8px;
+}
+
+.modal-actions {
+	display: flex;
+	gap: 12px;
+	justify-content: flex-end;
+	margin-top: 20px;
 }
 </style>

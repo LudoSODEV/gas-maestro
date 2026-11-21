@@ -44,6 +44,21 @@ function Maestro_getOrCreateAutoDb()
 	return Webapp.getOrCreateAutoDb();
 }
 
+function Maestro_getActiveDbKey()
+{
+	return Webapp.getActiveDbKey();
+}
+
+function Maestro_setActiveDbKey(dbKey: string)
+{
+	return Webapp.setActiveDbKey(dbKey);
+}
+
+function Maestro_trashDb(spreadsheetId: string, dbKey?: string)
+{
+	return Webapp.trashDb(spreadsheetId, dbKey);
+}
+
 // Expose entry points to globalThis for Google Apps Script execution
 (globalThis as any).doGet = doGet;
 (globalThis as any).Maestro_getUserDbs = Maestro_getUserDbs;
@@ -51,3 +66,6 @@ function Maestro_getOrCreateAutoDb()
 (globalThis as any).Maestro_getCurrentUserEmail = Maestro_getCurrentUserEmail;
 (globalThis as any).Maestro_listAccessibleDbs = Maestro_listAccessibleDbs;
 (globalThis as any).Maestro_getOrCreateAutoDb = Maestro_getOrCreateAutoDb;
+(globalThis as any).Maestro_getActiveDbKey = Maestro_getActiveDbKey;
+(globalThis as any).Maestro_setActiveDbKey = Maestro_setActiveDbKey;
+(globalThis as any).Maestro_trashDb = Maestro_trashDb;

@@ -206,6 +206,17 @@ export default {
 					})
 					.withFailureHandler(() => {})
 					.Maestro_getUserDbs()
+
+				window.google.script.run
+					.withSuccessHandler((activeKey: string) =>
+					{
+						if (activeKey)
+						{
+							activeDbKey.value = activeKey
+						}
+					})
+					.withFailureHandler(() => {})
+					.Maestro_getActiveDbKey()
 			}
 			else
 			{
@@ -278,9 +289,18 @@ export default {
 			}
 		}
 
+		const handleDbActivated = (e: any) =>
+		{
+			if (e.detail)
+			{
+				activeDbKey.value = e.detail
+			}
+		}
+
 		onMounted(() =>
 		{
 			loadUserData()
+			window.addEventListener('db-activated', handleDbActivated)
 
 			const initialParams = window.INITIAL_PARAMS || {}
 			const initTool = initialParams.tool
@@ -326,6 +346,7 @@ export default {
 
 		onUnmounted(() =>
 		{
+			window.removeEventListener('db-activated', handleDbActivated)
 			if (!window.google?.script?.history)
 			{
 				window.removeEventListener('popstate', handlePopState)

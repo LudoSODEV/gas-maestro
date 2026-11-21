@@ -14,23 +14,78 @@ export const Webapp = {
 			.setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 	},
 
-	getUserDbs(): Array<{ dbKey: string; spreadsheetId: string }>
+	getUserDbs(): Array<{ dbKey: string; spreadsheetId: string; name?: string }>
 	{
 		const props = PropertiesService.getUserProperties();
 		const rawData = props.getProperty('MAESTRO_DATABASES');
 		
+		let dbs: Array<{ dbKey: string; spreadsheetId: string; name?: string }> = [];
 		if (rawData)
 		{
-			return JSON.parse(rawData);
+			try
+			{
+				dbs = JSON.parse(rawData);
+			}
+			catch (e)
+			{
+				dbs = [];
+			}
 		}
+
+		dbs.forEach(db =>
+		{
+			if (db.spreadsheetId && !db.spreadsheetId.startsWith('mock'))
+			{
+				const meta = DbManager.getFileMetadata(db.spreadsheetId);
+				db.name = meta.name;
+			}
+			else
+			{
+				db.name = 'Maestro DB ' + db.dbKey;
+			}
+		});
 		
-		return [];
+		return dbs;
 	},
 
-	saveUserDbs(dbs: Array<{ dbKey: string; spreadsheetId: string }>)
+	saveUserDbs(dbs: Array<{ dbKey: string; spreadsheetId: string; name?: string }>)
 	{
 		const props = PropertiesService.getUserProperties();
-		props.setProperty('MAESTRO_DATABASES', JSON.stringify(dbs));
+		// Clean up transient name property before saving
+		const cleanDbs = dbs.map(d => ({ dbKey: d.dbKey, spreadsheetId: d.spreadsheetId }));
+		props.setProperty('MAESTRO_DATABASES', JSON.stringify(cleanDbs));
+		return { success: true };
+	},
+
+	getActiveDbKey(): string
+	{
+		const props = PropertiesService.getUserProperties();
+		const active = props.getProperty('MAESTRO_ACTIVE_DB');
+		if (active)
+		{
+			return active;
+		}
+		const dbs = Webapp.getUserDbs();
+		if (dbs.length > 0)
+		{
+			return dbs[0].dbKey;
+		}
+		return 'ba13';
+	},
+
+	setActiveDbKey(dbKey: string)
+	{
+		const props = PropertiesService.getUserProperties();
+		props.setProperty('MAESTRO_ACTIVE_DB', dbKey.toLowerCase());
+		return { success: true };
+	},
+
+	trashDb(spreadsheetId: string, dbKey?: string)
+	{
+		DbManager.trashDb(spreadsheetId);
+		const dbs = Webapp.getUserDbs();
+		const filtered = dbs.filter(d => d.spreadsheetId !== spreadsheetId && (!dbKey || d.dbKey !== dbKey));
+		Webapp.saveUserDbs(filtered);
 		return { success: true };
 	},
 
