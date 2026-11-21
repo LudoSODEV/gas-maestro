@@ -145,6 +145,7 @@ import DatabaseManagement from './Components/DatabaseManagement.vue'
 import StructureProfiles from './Components/StructureProfiles.vue'
 import AssoConnect from './Components/AssoConnect.vue'
 import Administration from './Components/Administration.vue'
+import { IS_DEV, googleRun } from './constants'
 
 export default {
 	name: 'App',
@@ -183,10 +184,10 @@ export default {
 
 		const loadUserData = () =>
 		{
-			if (window.google?.script?.run)
+			if (!IS_DEV)
 			{
-				window.google.script.run
-					.withSuccessHandler((email: string) =>
+				googleRun()
+					?.withSuccessHandler((email: string) =>
 					{
 						currentUserEmail.value = email
 					})
@@ -196,8 +197,8 @@ export default {
 					})
 					.Maestro_getCurrentUserEmail()
 
-				window.google.script.run
-					.withSuccessHandler((dbs: any) =>
+				googleRun()
+					?.withSuccessHandler((dbs: any) =>
 					{
 						if (Array.isArray(dbs) && dbs.length > 0)
 						{
@@ -207,8 +208,8 @@ export default {
 					.withFailureHandler(() => {})
 					.Maestro_getUserDbs()
 
-				window.google.script.run
-					.withSuccessHandler((activeKey: string) =>
+				googleRun()
+					?.withSuccessHandler((activeKey: string) =>
 					{
 						if (activeKey)
 						{

@@ -75,6 +75,7 @@
 
 <script lang="ts">
 import { ref, onMounted } from 'vue'
+import { IS_DEV, googleRun } from '../constants'
 
 interface DatabaseItem {
 	dbKey: string;
@@ -98,10 +99,10 @@ export default {
 		const loadDbs = () =>
 		{
 			loading.value = true
-			if (window.google?.script?.run)
+			if (!IS_DEV)
 			{
-				window.google.script.run
-					.withSuccessHandler((data: DatabaseItem[]) =>
+				googleRun()
+					?.withSuccessHandler((data: DatabaseItem[]) =>
 					{
 						dbs.value = data
 						loading.value = false
@@ -114,8 +115,8 @@ export default {
 					})
 					.Maestro_getUserDbs()
 
-				window.google.script.run
-					.withSuccessHandler((activeKey: string) =>
+				googleRun()
+					?.withSuccessHandler((activeKey: string) =>
 					{
 						if (activeKey)
 						{
@@ -142,10 +143,10 @@ export default {
 			activeDbKey.value = dbKey
 			window.dispatchEvent(new CustomEvent('db-activated', { detail: dbKey }))
 
-			if (window.google?.script?.run)
+			if (!IS_DEV)
 			{
-				window.google.script.run
-					.withSuccessHandler(() =>
+				googleRun()
+					?.withSuccessHandler(() =>
 					{
 						statusMessage.value = `Base active définie sur : ${dbKey}`
 						statusColor.value = 'green'
@@ -196,10 +197,10 @@ export default {
 			statusMessage.value = 'Placement du fichier à la corbeille en cours...'
 			statusColor.value = 'blue'
 
-			if (window.google?.script?.run)
+			if (!IS_DEV)
 			{
-				window.google.script.run
-					.withSuccessHandler(() =>
+				googleRun()
+					?.withSuccessHandler(() =>
 					{
 						dbs.value = dbs.value.filter(d => d.spreadsheetId !== target.spreadsheetId && d.dbKey !== target.dbKey)
 						statusMessage.value = `Base ${target.dbKey} placée à la corbeille et supprimée de la liste.`
@@ -227,10 +228,10 @@ export default {
 		{
 			statusMessage.value = 'Enregistrement en cours...'
 			statusColor.value = 'blue'
-			if (window.google?.script?.run)
+			if (!IS_DEV)
 			{
-				window.google.script.run
-					.withSuccessHandler(() =>
+				googleRun()
+					?.withSuccessHandler(() =>
 					{
 						statusMessage.value = 'Modifications enregistrées avec succès !'
 						statusColor.value = 'green'
@@ -257,10 +258,10 @@ export default {
 			statusMessage.value = 'Génération automatique de la base de données en cours...'
 			statusColor.value = 'blue'
 
-			if (window.google?.script?.run)
+			if (!IS_DEV)
 			{
-				window.google.script.run
-					.withSuccessHandler((newDb: DatabaseItem) =>
+				googleRun()
+					?.withSuccessHandler((newDb: DatabaseItem) =>
 					{
 						if (!dbs.value.some((d: DatabaseItem) => d.dbKey === newDb.dbKey))
 						{
