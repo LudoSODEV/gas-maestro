@@ -59,7 +59,7 @@ export class ImportManager
 					}
 				},
 				fileId,
-				undefined,
+				null,
 				{
 					supportsAllDrives: true,
 					fields: 'id, trashed, properties'
@@ -261,7 +261,7 @@ export class ImportManager
 
 		try
 		{
-			Drive.Files.delete(fileId, { supportsAllDrives: true });
+			Drive.Files.remove(fileId, { supportsAllDrives: true });
 		}
 		catch (e: any)
 		{
@@ -279,7 +279,7 @@ export class ImportManager
 	{
 		try
 		{
-			Drive.Files.delete(fileId, { supportsAllDrives: true });
+			Drive.Files.remove(fileId, { supportsAllDrives: true });
 			return { success: true };
 		}
 		catch (e: any)
