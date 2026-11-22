@@ -47,6 +47,7 @@
 				<table>
 					<thead>
 						<tr>
+							<th>Date de création</th>
 							<th>Fichier</th>
 							<th>Type Détecté</th>
 							<th>Actions Disponibles</th>
@@ -55,6 +56,9 @@
 					</thead>
 					<tbody>
 						<tr v-for="item in stagedItems" :key="item.fileId">
+							<td class="text-sm text-slate-500 whitespace-nowrap">
+								{{ formatDate(item.createdTime) }}
+							</td>
 							<td class="font-medium text-slate-900">
 								{{ item.fileName }}
 							</td>
@@ -100,6 +104,7 @@ interface StagedItem {
 	fileId: string;
 	fileName: string;
 	detectedType: string;
+	createdTime?: string;
 	availableActions: Array<{ type: string; label: string }>;
 }
 
@@ -113,6 +118,25 @@ export default {
 		const statusMessage = ref('')
 		const statusColor = ref('green')
 		const isExecuting = ref<Record<string, boolean>>({})
+
+		const formatDate = (isoStr?: string) =>
+		{
+			if (!isoStr)
+			{
+				return '-'
+			}
+			try
+			{
+				return new Date(isoStr).toLocaleString('fr-FR', {
+					dateStyle: 'short',
+					timeStyle: 'medium'
+				})
+			}
+			catch (e)
+			{
+				return isoStr
+			}
+		}
 
 		const loadStagedImports = () =>
 		{
@@ -141,12 +165,14 @@ export default {
 						fileId: 'mock-file-1',
 						fileName: 'export_structures_2026.xlsx',
 						detectedType: 'AssoConnect (Structures)',
+						createdTime: new Date().toISOString(),
 						availableActions: [{ type: 'IMPORT_ASSOCONNECT_STRUCTURES', label: 'Import AssoConnect structures' }]
 					},
 					{
 						fileId: 'mock-file-2',
 						fileName: 'inscriptions_collec.xlsx',
 						detectedType: 'Application Collecte (Inscriptions)',
+						createdTime: new Date(Date.now() - 3600000).toISOString(),
 						availableActions: [{ type: 'IMPORT_COLLECTE_INSCRIPTIONS', label: 'Import Collecte (Inscriptions)' }]
 					}
 				]
@@ -211,6 +237,7 @@ export default {
 								fileId: 'mock-staged-' + Math.random(),
 								fileName: p.name,
 								detectedType: 'AssoConnect (Structures)',
+								createdTime: new Date().toISOString(),
 								availableActions: [{ type: 'IMPORT_ASSOCONNECT_STRUCTURES', label: 'Import AssoConnect structures' }]
 							})
 						})
@@ -315,6 +342,7 @@ export default {
 			statusMessage,
 			statusColor,
 			isExecuting,
+			formatDate,
 			handleFileSelect,
 			handleDrop,
 			executeAction,

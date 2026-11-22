@@ -5,6 +5,7 @@ export interface StagedItem
 	fileId: string;
 	fileName: string;
 	detectedType: string;
+	createdTime?: string;
 	availableActions: Array<{ type: string; label: string }>;
 }
 
@@ -29,47 +30,52 @@ export class ImportManager
 				file = Drive.Files.create(
 					{
 						name: f.name,
-						mimeType: 'application/vnd.google-apps.spreadsheet'
+						mimeType: 'application/vnd.google-apps.spreadsheet',
+						properties: {
+							MAESTRO_IMPORT: '1'
+						}
 					},
 					blob,
-					{ supportsAllDrives: true }
+					{
+						fields: 'id, name, createdTime, properties'
+					}
 				);
 			}
 			catch (err)
 			{
 				file = Drive.Files.create(
 					{
-						name: f.name
+						name: f.name,
+						properties: {
+							MAESTRO_IMPORT: '1'
+						}
 					},
 					blob,
-					{ supportsAllDrives: true }
+					{
+						fields: 'id, name, createdTime, properties'
+					}
 				);
 			}
 
 			const fileId = file.id;
+			const createdTime = file.createdTime || new Date().toISOString();
 
 			const introspection = ImportManager.introspectFile(fileId, f.name);
 
-			// Tag with MAESTRO_IMPORT property and trash in a single v3 update call
+			// Move to trash after creation and introspection
 			Drive.Files.update(
 				{
-					trashed: true,
-					properties: {
-						MAESTRO_IMPORT: '1'
-					}
+					trashed: true
 				},
 				fileId,
-				null,
-				{
-					supportsAllDrives: true,
-					fields: 'id, trashed, properties'
-				}
+				null
 			);
 
 			results.push({
 				fileId: fileId,
 				fileName: f.name,
 				detectedType: introspection.detectedType,
+				createdTime: createdTime,
 				availableActions: introspection.availableActions
 			});
 		});
@@ -82,12 +88,11 @@ export class ImportManager
 		const items: StagedItem[] = [];
 		try
 		{
-			const query = "properties has { key='MAESTRO_IMPORT' } and trashed = true";
+			const query = "'me' in owners and properties has { key='MAESTRO_IMPORT' and value='1' } and trashed = true";
 			const result = Drive.Files.list({
 				q: query,
-				fields: 'files(id, name, properties)',
-				supportsAllDrives: true,
-				includeItemsFromAllDrives: true
+				corpora: 'user',
+				fields: 'files(id, name, createdTime, properties)'
 			});
 
 			if (result && result.files)
@@ -101,15 +106,13 @@ export class ImportManager
 						fileId: file.id,
 						fileName: fileName,
 						detectedType: introspection.detectedType,
+						createdTime: file.createdTime || '',
 						availableActions: introspection.availableActions
 					});
 				});
 			}
 		}
-		catch (e: any)
-		{
-			console.error('Erreur lors de la récupération des fichiers en attente:', e?.message || e);
-		}
+		catch (e) {}
 
 		return items;
 	}
@@ -261,12 +264,9 @@ export class ImportManager
 
 		try
 		{
-			Drive.Files.remove(fileId, { supportsAllDrives: true });
+			Drive.Files.remove(fileId);
 		}
-		catch (e: any)
-		{
-			console.warn(`Impossible de supprimer le fichier temporaire ${fileId}:`, e?.message || e);
-		}
+		catch (e) {}
 
 		return {
 			success: true,
@@ -279,7 +279,7 @@ export class ImportManager
 	{
 		try
 		{
-			Drive.Files.remove(fileId, { supportsAllDrives: true });
+			Drive.Files.remove(fileId);
 			return { success: true };
 		}
 		catch (e: any)
