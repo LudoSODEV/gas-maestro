@@ -138,7 +138,7 @@ export const Webapp = {
 	{
 		const email = Session.getActiveUser().getEmail() || '';
 		const match = email.match(/^(ba[0-9]+)\./i);
-		const dbKey = match ? match[1].toLowerCase() : 'demo';
+		const dbKey = match ? match[1].toLowerCase() : 'ba13';
 		const name = 'Maestro DB ' + dbKey;
 		return { dbKey, name };
 	},
@@ -182,29 +182,35 @@ export const Webapp = {
 		return null;
 	},
 
-	createAutoDb()
+	createAutoDb(customDbKey?: string, customName?: string)
 	{
-		const email = Session.getActiveUser().getEmail() || '';
-		const match = email.match(/^(ba[0-9]+)\./i);
+		let dbKey = customDbKey;
+		let name = customName;
 
-		if (!match)
+		if (!dbKey)
 		{
-			throw new Error('User email not recognized for automatic database creation (expected format: baXX.*)');
+			const email = Session.getActiveUser().getEmail() || '';
+			const match = email.match(/^(ba[0-9]+)\./i);
+			dbKey = match ? match[1].toLowerCase() : 'ba13';
 		}
 
-		const dbKey = match[1].toLowerCase();
+		dbKey = dbKey.toLowerCase();
+		if (!name)
+		{
+			name = 'Maestro DB ' + dbKey;
+		}
 
 		const dbs = Webapp.getUserDbs();
 		let db = dbs.find((d: { dbKey: string }) => d.dbKey === dbKey);
 
-		if (db)
+		if (!db)
 		{
-			return db;
-		}
-
-		db = DbManager.createDb(dbKey);
-		if (!dbs.some((d: { dbKey: string }) => d.dbKey === dbKey))
-		{
+			const created = DbManager.createDb(dbKey, name);
+			db = {
+				dbKey: created.dbKey,
+				spreadsheetId: created.spreadsheetId,
+				name: name
+			};
 			dbs.push(db);
 			Webapp.saveUserDbs(dbs);
 		}

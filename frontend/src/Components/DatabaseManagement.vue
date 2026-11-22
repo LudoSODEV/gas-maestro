@@ -18,10 +18,10 @@
 				<tbody>
 					<tr v-for="(db, index) in dbs" :key="index">
 						<td>
-							<input v-model="db.dbKey" type="text" readonly style="background: #e9ecef;" />
+							<input v-model="db.dbKey" type="text" />
 						</td>
 						<td>
-							<input v-model="db.name" type="text" readonly style="background: #e9ecef;" />
+							<input v-model="db.name" type="text" />
 						</td>
 						<td>
 							<input v-model="db.spreadsheetId" type="text" style="width: 250px;" />
@@ -46,11 +46,31 @@
 
 			<div class="action-bar">
 				<button class="primary" @click="searchAutoDb" style="background: #319795;" title="Rechercher une base de données existante sur Drive ou localement">🔍 Rechercher la base disponible</button>
-				<button class="primary" @click="createAutoDb" style="background: #2b6cb0;" title="Créer une nouvelle base de données pour votre branche">➕ Créer une nouvelle base</button>
+				<button class="primary" @click="openCreateDialog" style="background: #2b6cb0;" title="Créer une nouvelle base de données">➕ Créer une nouvelle base</button>
 				<button class="primary" @click="saveDbs" style="background: #4a5568;">Enregistrer les modifications</button>
 			</div>
 
 			<p v-if="statusMessage" class="status-msg" :style="{ color: statusColor }">{{ statusMessage }}</p>
+		</div>
+
+		<!-- Create Database Modal -->
+		<div v-if="showCreateDialog" class="modal-overlay">
+			<div class="modal-card">
+				<h3>Créer une nouvelle base de données</h3>
+				<p class="description">Définissez la clé (dbKey) et le nom du document Google Drive pour la nouvelle base.</p>
+				<div class="form-group" style="margin-bottom: 16px;">
+					<label style="display: block; font-weight: 500; margin-bottom: 6px; font-size: 14px;">Clé de base (dbKey)</label>
+					<input v-model="newDbForm.dbKey" type="text" placeholder="ex: ba13" />
+				</div>
+				<div class="form-group" style="margin-bottom: 16px;">
+					<label style="display: block; font-weight: 500; margin-bottom: 6px; font-size: 14px;">Nom du document Google Drive</label>
+					<input v-model="newDbForm.name" type="text" placeholder="ex: Maestro DB BA13" />
+				</div>
+				<div class="modal-actions">
+					<button class="primary" @click="confirmCreateDb" style="background: #2b6cb0;">Créer</button>
+					<button class="secondary" @click="closeCreateDialog">Annuler</button>
+				</div>
+			</div>
 		</div>
 
 		<!-- Delete Explanation Dialog / Modal -->
@@ -96,6 +116,12 @@ export default {
 
 		const showDeleteDialog = ref(false)
 		const dbToDelete = ref<DatabaseItem | null>(null)
+
+		const showCreateDialog = ref(false)
+		const newDbForm = ref({
+			dbKey: 'ba13',
+			name: 'Maestro DB BA13'
+		})
 
 		const loadDbs = () =>
 		{
@@ -162,6 +188,70 @@ export default {
 		{
 			showDeleteDialog.value = false
 			dbToDelete.value = null
+		}
+
+		const openCreateDialog = () =>
+		{
+			googleRun()
+				.withSuccessHandler((info: { dbKey: string; name: string }) =>
+				{
+					if (info)
+					{
+						newDbForm.value = {
+							dbKey: info.dbKey || 'ba13',
+							name: info.name || 'Maestro DB BA13'
+						}
+					}
+					showCreateDialog.value = true
+				})
+				.withFailureHandler(() =>
+				{
+					newDbForm.value = {
+						dbKey: 'ba13',
+						name: 'Maestro DB BA13'
+					}
+					showCreateDialog.value = true
+				})
+				.Maestro_getDefaultDbInfo()
+		}
+
+		const closeCreateDialog = () =>
+		{
+			showCreateDialog.value = false
+		}
+
+		const confirmCreateDb = () =>
+		{
+			const dbKey = (newDbForm.value.dbKey || '').trim().toLowerCase()
+			const name = (newDbForm.value.name || '').trim()
+
+			if (!dbKey)
+			{
+				statusMessage.value = 'Veuillez saisir une clé de base valide.'
+				statusColor.value = 'red'
+				return
+			}
+
+			closeCreateDialog()
+			statusMessage.value = 'Création d\'une nouvelle base de données en cours...'
+			statusColor.value = 'blue'
+
+			googleRun()
+				.withSuccessHandler((newDb: DatabaseItem) =>
+				{
+					if (newDb && !dbs.value.some((d: DatabaseItem) => d.dbKey === newDb.dbKey))
+					{
+						dbs.value.push(newDb)
+					}
+					statusMessage.value = `Nouvelle base créée et initialisée : ${newDb.dbKey}`
+					statusColor.value = 'green'
+				})
+				.withFailureHandler((err: any) =>
+				{
+					statusMessage.value = 'Erreur lors de la création: ' + err.message
+					statusColor.value = 'red'
+				})
+				.Maestro_createAutoDb(dbKey, name)
 		}
 
 		const confirmTrashDb = () =>
@@ -241,29 +331,6 @@ export default {
 				.Maestro_searchAutoDb()
 		}
 
-		const createAutoDb = () =>
-		{
-			statusMessage.value = 'Création d\'une nouvelle base de données en cours...'
-			statusColor.value = 'blue'
-
-			googleRun()
-				.withSuccessHandler((newDb: DatabaseItem) =>
-				{
-					if (!dbs.value.some((d: DatabaseItem) => d.dbKey === newDb.dbKey))
-					{
-						dbs.value.push(newDb)
-					}
-					statusMessage.value = `Nouvelle base créée et initialisée : ${newDb.dbKey}`
-					statusColor.value = 'green'
-				})
-				.withFailureHandler((err: any) =>
-				{
-					statusMessage.value = 'Erreur lors de la création: ' + err.message
-					statusColor.value = 'red'
-				})
-				.Maestro_createAutoDb()
-		}
-
 		onMounted(() =>
 		{
 			loadDbs()
@@ -277,14 +344,18 @@ export default {
 			statusColor,
 			showDeleteDialog,
 			dbToDelete,
+			showCreateDialog,
+			newDbForm,
 			selectDb,
 			hideDb,
 			openDeleteDialog,
 			closeDeleteDialog,
+			openCreateDialog,
+			closeCreateDialog,
+			confirmCreateDb,
 			confirmTrashDb,
 			saveDbs,
-			searchAutoDb,
-			createAutoDb
+			searchAutoDb
 		}
 	}
 }
@@ -435,7 +506,7 @@ button.warning {
 
 .modal-card h3 {
 	margin-top: 0;
-	color: #d93025;
+	color: #2b6cb0;
 }
 
 .delete-instructions {
