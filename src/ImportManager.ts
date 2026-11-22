@@ -28,14 +28,14 @@ export class ImportManager
 
 				try
 				{
-					file = (Drive as any).Files.insert({
+					file = Drive.Files.insert({
 						title: f.name,
 						mimeType: 'application/vnd.google-apps.spreadsheet'
 					}, blob);
 				}
 				catch (err)
 				{
-					file = (Drive as any).Files.insert({
+					file = Drive.Files.insert({
 						title: f.name
 					}, blob);
 				}
@@ -43,7 +43,7 @@ export class ImportManager
 				const fileId = file.id;
 
 				// Immediately move to trash for 30-day auto-purge sandbox hygiene
-				(Drive as any).Files.update({ trashed: true }, fileId);
+				Drive.Files.update({ trashed: true }, fileId);
 
 				const introspection = ImportManager.introspectFile(fileId, f.name);
 
@@ -53,7 +53,7 @@ export class ImportManager
 					originalName: f.name
 				};
 
-				(Drive as any).Files.update({
+				Drive.Files.update({
 					properties: {
 						MAESTRO_IMPORT_METADATA: JSON.stringify(metadata)
 					}
@@ -81,7 +81,7 @@ export class ImportManager
 		try
 		{
 			const query = "properties has { key='MAESTRO_IMPORT_METADATA' } and trashed = true";
-			const result = (Drive as any).Files.list({ q: query });
+			const result = Drive.Files.list({ q: query });
 
 			if (result && result.files)
 			{
@@ -260,7 +260,7 @@ export class ImportManager
 
 		try
 		{
-			(Drive as any).Files.remove(fileId);
+			Drive.Files.remove(fileId);
 		}
 		catch (e) {}
 
@@ -275,7 +275,7 @@ export class ImportManager
 	{
 		try
 		{
-			(Drive as any).Files.remove(fileId);
+			Drive.Files.remove(fileId);
 			return { success: true };
 		}
 		catch (e: any)

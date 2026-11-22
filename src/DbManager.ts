@@ -7,7 +7,7 @@ export class DbManager
 		const ss = SpreadsheetApp.create('Maestro DB ' + normalizedDbKey);
 		const spreadsheetId = ss.getId();
 
-		(Drive as any).Files.update({
+		Drive.Files.update({
 			properties: {
 				MAESTRO_DATABASE_KEY: normalizedDbKey
 			}
@@ -50,7 +50,7 @@ export class DbManager
 	{
 		const normalizedDbKey = dbKey.toLowerCase();
 		const query = "properties has { key='MAESTRO_DATABASE_KEY' and value='" + normalizedDbKey + "' } and trashed = false";
-		const result = (Drive as any).Files.list({ q: query });
+		const result = Drive.Files.list({ q: query });
 
 		if (result && result.files && result.files.length > 0)
 		{
@@ -67,7 +67,7 @@ export class DbManager
 	static listAccessibleDbs()
 	{
 		const query = "properties has { key='MAESTRO_DATABASE_KEY' } and trashed = false";
-		const result = (Drive as any).Files.list({ q: query });
+		const result = Drive.Files.list({ q: query });
 		const dbs: Array<{ dbKey: string; spreadsheetId: string }> = [];
 
 		if (result && result.files)
@@ -91,7 +91,7 @@ export class DbManager
 	{
 		try
 		{
-			const file = (Drive as any).Files.get(spreadsheetId);
+			const file = Drive.Files.get(spreadsheetId);
 			return {
 				name: file.name || 'Sans titre',
 				trashed: file.trashed || false
@@ -110,7 +110,7 @@ export class DbManager
 	{
 		try
 		{
-			(Drive as any).Files.update({ trashed: true }, spreadsheetId);
+			Drive.Files.update({ trashed: true }, spreadsheetId);
 			return { success: true };
 		}
 		catch (e: any)
