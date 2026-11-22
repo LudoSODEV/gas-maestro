@@ -98,7 +98,7 @@
 
 <script lang="ts">
 import { ref, onMounted } from 'vue'
-import { IS_DEV, googleRun } from '../constants'
+import { googleRun } from '../constants'
 
 interface StagedItem {
 	fileId: string;
@@ -141,43 +141,19 @@ export default {
 		const loadStagedImports = () =>
 		{
 			loading.value = true
-			if (!IS_DEV)
-			{
-				googleRun()
-					?.withSuccessHandler((items: StagedItem[]) =>
-					{
-						stagedItems.value = items || []
-						loading.value = false
-					})
-					.withFailureHandler((err: any) =>
-					{
-						statusMessage.value = 'Erreur lors du chargement des fichiers: ' + err.message
-						statusColor.value = 'red'
-						loading.value = false
-					})
-					.Maestro_listStagedImports()
-			}
-			else
-			{
-				// Local dev mock
-				stagedItems.value = [
-					{
-						fileId: 'mock-file-1',
-						fileName: 'export_structures_2026.xlsx',
-						detectedType: 'AssoConnect (Structures)',
-						createdTime: new Date().toISOString(),
-						availableActions: [{ type: 'IMPORT_ASSOCONNECT_STRUCTURES', label: 'Import AssoConnect structures' }]
-					},
-					{
-						fileId: 'mock-file-2',
-						fileName: 'inscriptions_collec.xlsx',
-						detectedType: 'Application Collecte (Inscriptions)',
-						createdTime: new Date(Date.now() - 3600000).toISOString(),
-						availableActions: [{ type: 'IMPORT_COLLECTE_INSCRIPTIONS', label: 'Import Collecte (Inscriptions)' }]
-					}
-				]
-				loading.value = false
-			}
+			googleRun()
+				.withSuccessHandler((items: StagedItem[]) =>
+				{
+					stagedItems.value = items || []
+					loading.value = false
+				})
+				.withFailureHandler((err: any) =>
+				{
+					statusMessage.value = 'Erreur lors du chargement des fichiers: ' + err.message
+					statusColor.value = 'red'
+					loading.value = false
+				})
+				.Maestro_listStagedImports()
 		}
 
 		const processFiles = (filesList: FileList | File[]) =>
@@ -208,43 +184,22 @@ export default {
 
 			Promise.all(filePromises).then((payloads) =>
 			{
-				if (!IS_DEV)
-				{
-					googleRun()
-						?.withSuccessHandler((newItems: StagedItem[]) =>
-						{
-							if (Array.isArray(newItems))
-							{
-								stagedItems.value = [...stagedItems.value, ...newItems]
-							}
-							statusMessage.value = 'Fichiers téléversés, analysés et prêts pour l\'importation.'
-							statusColor.value = 'green'
-						})
-						.withFailureHandler((err: any) =>
-						{
-							statusMessage.value = 'Erreur lors du téléversement: ' + err.message
-							statusColor.value = 'red'
-						})
-						.Maestro_stageImportFiles(payloads)
-				}
-				else
-				{
-					setTimeout(() =>
+				googleRun()
+					.withSuccessHandler((newItems: StagedItem[]) =>
 					{
-						payloads.forEach((p: any) =>
+						if (Array.isArray(newItems))
 						{
-							stagedItems.value.push({
-								fileId: 'mock-staged-' + Math.random(),
-								fileName: p.name,
-								detectedType: 'AssoConnect (Structures)',
-								createdTime: new Date().toISOString(),
-								availableActions: [{ type: 'IMPORT_ASSOCONNECT_STRUCTURES', label: 'Import AssoConnect structures' }]
-							})
-						})
-						statusMessage.value = 'Fichiers téléversés et analysés avec succès ! (Mode Local)'
+							stagedItems.value = [...stagedItems.value, ...newItems]
+						}
+						statusMessage.value = 'Fichiers téléversés, analysés et prêts pour l\'importation.'
 						statusColor.value = 'green'
-					}, 800)
-				}
+					})
+					.withFailureHandler((err: any) =>
+					{
+						statusMessage.value = 'Erreur lors du téléversement: ' + err.message
+						statusColor.value = 'red'
+					})
+					.Maestro_stageImportFiles(payloads)
 			})
 		}
 
@@ -271,34 +226,21 @@ export default {
 			statusMessage.value = 'Exécution de l\'importation et nettoyage du fichier temporaire...'
 			statusColor.value = 'blue'
 
-			if (!IS_DEV)
-			{
-				googleRun()
-					?.withSuccessHandler((res: any) =>
-					{
-						isExecuting.value[fileId] = false
-						stagedItems.value = stagedItems.value.filter(i => i.fileId !== fileId)
-						statusMessage.value = res.message || 'Importation effectuée avec succès !'
-						statusColor.value = 'green'
-					})
-					.withFailureHandler((err: any) =>
-					{
-						isExecuting.value[fileId] = false
-						statusMessage.value = 'Erreur lors de l\'importation: ' + err.message
-						statusColor.value = 'red'
-					})
-					.Maestro_executeImportAction(fileId, actionType)
-			}
-			else
-			{
-				setTimeout(() =>
+			googleRun()
+				.withSuccessHandler((res: any) =>
 				{
 					isExecuting.value[fileId] = false
 					stagedItems.value = stagedItems.value.filter(i => i.fileId !== fileId)
-					statusMessage.value = 'Importation réussie et fichier temporaire purgé ! (Mode Local)'
+					statusMessage.value = res.message || 'Importation effectuée avec succès !'
 					statusColor.value = 'green'
-				}, 1000)
-			}
+				})
+				.withFailureHandler((err: any) =>
+				{
+					isExecuting.value[fileId] = false
+					statusMessage.value = 'Erreur lors de l\'importation: ' + err.message
+					statusColor.value = 'red'
+				})
+				.Maestro_executeImportAction(fileId, actionType)
 		}
 
 		const discardFile = (fileId: string) =>
@@ -306,28 +248,19 @@ export default {
 			statusMessage.value = 'Suppression du fichier temporaire...'
 			statusColor.value = 'blue'
 
-			if (!IS_DEV)
-			{
-				googleRun()
-					?.withSuccessHandler(() =>
-					{
-						stagedItems.value = stagedItems.value.filter(i => i.fileId !== fileId)
-						statusMessage.value = 'Fichier temporaire supprimé définitivement du bac à sable.'
-						statusColor.value = 'green'
-					})
-					.withFailureHandler((err: any) =>
-					{
-						statusMessage.value = 'Erreur lors de la suppression: ' + err.message
-						statusColor.value = 'red'
-					})
-					.Maestro_discardImportFile(fileId)
-			}
-			else
-			{
-				stagedItems.value = stagedItems.value.filter(i => i.fileId !== fileId)
-				statusMessage.value = 'Fichier temporaire supprimé. (Mode Local)'
-				statusColor.value = 'green'
-			}
+			googleRun()
+				.withSuccessHandler(() =>
+				{
+					stagedItems.value = stagedItems.value.filter(i => i.fileId !== fileId)
+					statusMessage.value = 'Fichier temporaire supprimé définitivement du bac à sable.'
+					statusColor.value = 'green'
+				})
+				.withFailureHandler((err: any) =>
+				{
+					statusMessage.value = 'Erreur lors de la suppression: ' + err.message
+					statusColor.value = 'red'
+				})
+				.Maestro_discardImportFile(fileId)
 		}
 
 		onMounted(() =>

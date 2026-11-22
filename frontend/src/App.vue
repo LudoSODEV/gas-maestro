@@ -150,7 +150,7 @@ import StructureProfiles from './Components/StructureProfiles.vue'
 import ImportManagement from './Components/ImportManagement.vue'
 import AssoConnect from './Components/AssoConnect.vue'
 import Administration from './Components/Administration.vue'
-import { IS_DEV, googleRun } from './constants'
+import { googleRun } from './constants'
 
 export default {
 	name: 'App',
@@ -191,46 +191,38 @@ export default {
 
 		const loadUserData = () =>
 		{
-			if (!IS_DEV)
-			{
-				googleRun()
-					?.withSuccessHandler((email: string) =>
-					{
-						currentUserEmail.value = email
-					})
-					.withFailureHandler(() =>
-					{
-						currentUserEmail.value = 'Utilisateur inconnu'
-					})
-					.Maestro_getCurrentUserEmail()
+			googleRun()
+				.withSuccessHandler((email: string) =>
+				{
+					currentUserEmail.value = email
+				})
+				.withFailureHandler(() =>
+				{
+					currentUserEmail.value = 'Utilisateur inconnu'
+				})
+				.Maestro_getCurrentUserEmail()
 
-				googleRun()
-					?.withSuccessHandler((dbs: any) =>
+			googleRun()
+				.withSuccessHandler((dbs: any) =>
+				{
+					if (Array.isArray(dbs) && dbs.length > 0)
 					{
-						if (Array.isArray(dbs) && dbs.length > 0)
-						{
-							activeDbKey.value = dbs[0].dbKey || 'ba13'
-						}
-					})
-					.withFailureHandler(() => {})
-					.Maestro_getUserDbs()
+						activeDbKey.value = dbs[0].dbKey || 'ba13'
+					}
+				})
+				.withFailureHandler(() => {})
+				.Maestro_getUserDbs()
 
-				googleRun()
-					?.withSuccessHandler((activeKey: string) =>
+			googleRun()
+				.withSuccessHandler((activeKey: string) =>
+				{
+					if (activeKey)
 					{
-						if (activeKey)
-						{
-							activeDbKey.value = activeKey
-						}
-					})
-					.withFailureHandler(() => {})
-					.Maestro_getActiveDbKey()
-			}
-			else
-			{
-				currentUserEmail.value = 'dev@local.host'
-				activeDbKey.value = 'ba13'
-			}
+						activeDbKey.value = activeKey
+					}
+				})
+				.withFailureHandler(() => {})
+				.Maestro_getActiveDbKey()
 		}
 
 		const applyState = (toolId: string) =>

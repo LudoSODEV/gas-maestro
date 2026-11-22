@@ -76,7 +76,7 @@
 
 <script lang="ts">
 import { ref, onMounted } from 'vue'
-import { IS_DEV, googleRun } from '../constants'
+import { googleRun } from '../constants'
 
 interface DatabaseItem {
 	dbKey: string;
@@ -100,43 +100,30 @@ export default {
 		const loadDbs = () =>
 		{
 			loading.value = true
-			if (!IS_DEV)
-			{
-				googleRun()
-					?.withSuccessHandler((data: DatabaseItem[]) =>
-					{
-						dbs.value = data
-						loading.value = false
-					})
-					.withFailureHandler((err: any) =>
-					{
-						statusMessage.value = 'Erreur lors du chargement: ' + err.message
-						statusColor.value = 'red'
-						loading.value = false
-					})
-					.Maestro_getUserDbs()
+			googleRun()
+				.withSuccessHandler((data: DatabaseItem[]) =>
+				{
+					dbs.value = data
+					loading.value = false
+				})
+				.withFailureHandler((err: any) =>
+				{
+					statusMessage.value = 'Erreur lors du chargement: ' + err.message
+					statusColor.value = 'red'
+					loading.value = false
+				})
+				.Maestro_getUserDbs()
 
-				googleRun()
-					?.withSuccessHandler((activeKey: string) =>
+			googleRun()
+				.withSuccessHandler((activeKey: string) =>
+				{
+					if (activeKey)
 					{
-						if (activeKey)
-						{
-							activeDbKey.value = activeKey
-						}
-					})
-					.withFailureHandler(() => {})
-					.Maestro_getActiveDbKey()
-			}
-			else
-			{
-				// Local dev mock
-				dbs.value = [
-					{ dbKey: 'ba13', name: 'Maestro DB BA13', spreadsheetId: 'mock-spreadsheet-id-13' },
-					{ dbKey: 'ba83', name: 'Maestro DB BA83', spreadsheetId: 'mock-spreadsheet-id-83' }
-				]
-				activeDbKey.value = 'ba13'
-				loading.value = false
-			}
+						activeDbKey.value = activeKey
+					}
+				})
+				.withFailureHandler(() => {})
+				.Maestro_getActiveDbKey()
 		}
 
 		const selectDb = (dbKey: string) =>
@@ -144,26 +131,18 @@ export default {
 			activeDbKey.value = dbKey
 			window.dispatchEvent(new CustomEvent('db-activated', { detail: dbKey }))
 
-			if (!IS_DEV)
-			{
-				googleRun()
-					?.withSuccessHandler(() =>
-					{
-						statusMessage.value = `Base active définie sur : ${dbKey}`
-						statusColor.value = 'green'
-					})
-					.withFailureHandler((err: any) =>
-					{
-						statusMessage.value = 'Erreur lors de la sélection de la base: ' + err.message
-						statusColor.value = 'red'
-					})
-					.Maestro_setActiveDbKey(dbKey)
-			}
-			else
-			{
-				statusMessage.value = `Base active définie sur : ${dbKey} (Mode Local)`
-				statusColor.value = 'green'
-			}
+			googleRun()
+				.withSuccessHandler(() =>
+				{
+					statusMessage.value = `Base active définie sur : ${dbKey}`
+					statusColor.value = 'green'
+				})
+				.withFailureHandler((err: any) =>
+				{
+					statusMessage.value = 'Erreur lors de la sélection de la base: ' + err.message
+					statusColor.value = 'red'
+				})
+				.Maestro_setActiveDbKey(dbKey)
 		}
 
 		const hideDb = (index: number) =>
@@ -198,60 +177,37 @@ export default {
 			statusMessage.value = 'Placement du fichier à la corbeille en cours...'
 			statusColor.value = 'blue'
 
-			if (!IS_DEV)
-			{
-				googleRun()
-					?.withSuccessHandler(() =>
-					{
-						dbs.value = dbs.value.filter(d => d.spreadsheetId !== target.spreadsheetId && d.dbKey !== target.dbKey)
-						statusMessage.value = `Base ${target.dbKey} placée à la corbeille et supprimée de la liste.`
-						statusColor.value = 'green'
-					})
-					.withFailureHandler((err: any) =>
-					{
-						statusMessage.value = 'Erreur lors de la suppression: ' + err.message
-						statusColor.value = 'red'
-					})
-					.Maestro_trashDb(target.spreadsheetId, target.dbKey)
-			}
-			else
-			{
-				setTimeout(() =>
+			googleRun()
+				.withSuccessHandler(() =>
 				{
 					dbs.value = dbs.value.filter(d => d.spreadsheetId !== target.spreadsheetId && d.dbKey !== target.dbKey)
-					statusMessage.value = `Base ${target.dbKey} placée à la corbeille et supprimée de la liste. (Mode Local)`
+					statusMessage.value = `Base ${target.dbKey} placée à la corbeille et supprimée de la liste.`
 					statusColor.value = 'green'
-				}, 500)
-			}
+				})
+				.withFailureHandler((err: any) =>
+				{
+					statusMessage.value = 'Erreur lors de la suppression: ' + err.message
+					statusColor.value = 'red'
+				})
+				.Maestro_trashDb(target.spreadsheetId, target.dbKey)
 		}
 
 		const saveDbs = () =>
 		{
 			statusMessage.value = 'Enregistrement en cours...'
 			statusColor.value = 'blue'
-			if (!IS_DEV)
-			{
-				googleRun()
-					?.withSuccessHandler(() =>
-					{
-						statusMessage.value = 'Modifications enregistrées avec succès !'
-						statusColor.value = 'green'
-					})
-					.withFailureHandler((err: any) =>
-					{
-						statusMessage.value = 'Erreur lors de l\'enregistrement: ' + err.message
-						statusColor.value = 'red'
-					})
-					.Maestro_saveUserDbs(dbs.value)
-			}
-			else
-			{
-				setTimeout(() =>
+			googleRun()
+				.withSuccessHandler(() =>
 				{
-					statusMessage.value = 'Modifications enregistrées avec succès ! (Mode Local)'
+					statusMessage.value = 'Modifications enregistrées avec succès !'
 					statusColor.value = 'green'
-				}, 500)
-			}
+				})
+				.withFailureHandler((err: any) =>
+				{
+					statusMessage.value = 'Erreur lors de l\'enregistrement: ' + err.message
+					statusColor.value = 'red'
+				})
+				.Maestro_saveUserDbs(dbs.value)
 		}
 
 		const searchAutoDb = () =>
@@ -259,46 +215,30 @@ export default {
 			statusMessage.value = 'Recherche de la base de données disponible en cours...'
 			statusColor.value = 'blue'
 
-			if (!IS_DEV)
-			{
-				googleRun()
-					?.withSuccessHandler((foundDb: DatabaseItem | null) =>
-					{
-						if (foundDb)
-						{
-							if (!dbs.value.some((d: DatabaseItem) => d.dbKey === foundDb.dbKey))
-							{
-								dbs.value.push(foundDb)
-							}
-							statusMessage.value = `Base trouvée et synchronisée : ${foundDb.dbKey}`
-							statusColor.value = 'green'
-						}
-						else
-						{
-							statusMessage.value = 'Aucune base de données existante trouvée sur Drive.'
-							statusColor.value = 'orange'
-						}
-					})
-					.withFailureHandler((err: any) =>
-					{
-						statusMessage.value = 'Erreur lors de la recherche: ' + err.message
-						statusColor.value = 'red'
-					})
-					.Maestro_searchAutoDb()
-			}
-			else
-			{
-				setTimeout(() =>
+			googleRun()
+				.withSuccessHandler((foundDb: DatabaseItem | null) =>
 				{
-					const mockDb: DatabaseItem = { dbKey: 'ba13', name: 'Maestro DB BA13', spreadsheetId: 'mock-auto-id' }
-					if (!dbs.value.some((d: DatabaseItem) => d.dbKey === mockDb.dbKey))
+					if (foundDb)
 					{
-						dbs.value.push(mockDb)
+						if (!dbs.value.some((d: DatabaseItem) => d.dbKey === foundDb.dbKey))
+						{
+							dbs.value.push(foundDb)
+						}
+						statusMessage.value = `Base trouvée et synchronisée : ${foundDb.dbKey}`
+						statusColor.value = 'green'
 					}
-					statusMessage.value = 'Base de données trouvée et synchronisée ! (Mode Local)'
-					statusColor.value = 'green'
-				}, 500)
-			}
+					else
+					{
+						statusMessage.value = 'Aucune base de données existante trouvée sur Drive.'
+						statusColor.value = 'orange'
+					}
+				})
+				.withFailureHandler((err: any) =>
+				{
+					statusMessage.value = 'Erreur lors de la recherche: ' + err.message
+					statusColor.value = 'red'
+				})
+				.Maestro_searchAutoDb()
 		}
 
 		const createAutoDb = () =>
@@ -306,38 +246,22 @@ export default {
 			statusMessage.value = 'Création d\'une nouvelle base de données en cours...'
 			statusColor.value = 'blue'
 
-			if (!IS_DEV)
-			{
-				googleRun()
-					?.withSuccessHandler((newDb: DatabaseItem) =>
-					{
-						if (!dbs.value.some((d: DatabaseItem) => d.dbKey === newDb.dbKey))
-						{
-							dbs.value.push(newDb)
-						}
-						statusMessage.value = `Nouvelle base créée et initialisée : ${newDb.dbKey}`
-						statusColor.value = 'green'
-					})
-					.withFailureHandler((err: any) =>
-					{
-						statusMessage.value = 'Erreur lors de la création: ' + err.message
-						statusColor.value = 'red'
-					})
-					.Maestro_createAutoDb()
-			}
-			else
-			{
-				setTimeout(() =>
+			googleRun()
+				.withSuccessHandler((newDb: DatabaseItem) =>
 				{
-					const mockDb: DatabaseItem = { dbKey: 'ba13', name: 'Maestro DB BA13', spreadsheetId: 'mock-new-id' }
-					if (!dbs.value.some((d: DatabaseItem) => d.dbKey === mockDb.dbKey))
+					if (!dbs.value.some((d: DatabaseItem) => d.dbKey === newDb.dbKey))
 					{
-						dbs.value.push(mockDb)
+						dbs.value.push(newDb)
 					}
-					statusMessage.value = 'Nouvelle base de données créée avec succès ! (Mode Local)'
+					statusMessage.value = `Nouvelle base créée et initialisée : ${newDb.dbKey}`
 					statusColor.value = 'green'
-				}, 500)
-			}
+				})
+				.withFailureHandler((err: any) =>
+				{
+					statusMessage.value = 'Erreur lors de la création: ' + err.message
+					statusColor.value = 'red'
+				})
+				.Maestro_createAutoDb()
 		}
 
 		onMounted(() =>
