@@ -3,11 +3,13 @@ import { Webapp } from './Webapp';
 import { FileSniffer } from './FileSniffers/FileSniffer';
 import { AssoConnectFileSniffer } from './FileSniffers/AssoConnectFileSniffer';
 import { ImportManager } from './ImportManager';
+import { Session } from './Session';
 
 const Maestro = {
 	DbManager,
 	Webapp,
 	ImportManager,
+	Session,
 	FileSniffers: {
 		FileSniffer,
 		AssoConnectFileSniffer
