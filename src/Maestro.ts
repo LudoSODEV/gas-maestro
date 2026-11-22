@@ -39,9 +39,14 @@ function Maestro_listAccessibleDbs()
 	return Webapp.listAccessibleDbs();
 }
 
-function Maestro_getOrCreateAutoDb()
+function Maestro_searchAutoDb()
 {
-	return Webapp.getOrCreateAutoDb();
+	return Webapp.searchAutoDb();
+}
+
+function Maestro_createAutoDb()
+{
+	return Webapp.createAutoDb();
 }
 
 function Maestro_getActiveDbKey()
@@ -65,7 +70,8 @@ function Maestro_trashDb(spreadsheetId: string, dbKey?: string)
 (globalThis as any).Maestro_saveUserDbs = Maestro_saveUserDbs;
 (globalThis as any).Maestro_getCurrentUserEmail = Maestro_getCurrentUserEmail;
 (globalThis as any).Maestro_listAccessibleDbs = Maestro_listAccessibleDbs;
-(globalThis as any).Maestro_getOrCreateAutoDb = Maestro_getOrCreateAutoDb;
+(globalThis as any).Maestro_searchAutoDb = Maestro_searchAutoDb;
+(globalThis as any).Maestro_createAutoDb = Maestro_createAutoDb;
 (globalThis as any).Maestro_getActiveDbKey = Maestro_getActiveDbKey;
 (globalThis as any).Maestro_setActiveDbKey = Maestro_setActiveDbKey;
 (globalThis as any).Maestro_trashDb = Maestro_trashDb;

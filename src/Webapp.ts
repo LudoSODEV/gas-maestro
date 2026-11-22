@@ -5,10 +5,10 @@ export const Webapp = {
 	{
 		const params = e && e.parameter ? e.parameter : {};
 		const template = HtmlService.createTemplateFromFile('index');
-		
+
 		(template as any).initialParams = JSON.stringify(params);
 		(template as any).deploymentUrl = ScriptApp.getService().getUrl();
-		
+
 		return template.evaluate()
 			.setTitle('Maestro - Centre de Contrôle')
 			.setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
@@ -18,7 +18,7 @@ export const Webapp = {
 	{
 		const props = PropertiesService.getUserProperties();
 		const rawData = props.getProperty('MAESTRO_DATABASES');
-		
+
 		let dbs: Array<{ dbKey: string; spreadsheetId: string; name?: string }> = [];
 		if (rawData)
 		{
@@ -44,7 +44,7 @@ export const Webapp = {
 				db.name = 'Maestro DB ' + db.dbKey;
 			}
 		});
-		
+
 		return dbs;
 	},
 
@@ -99,26 +99,26 @@ export const Webapp = {
 		return DbManager.listAccessibleDbs();
 	},
 
-	getOrCreateAutoDb()
+	searchAutoDb()
 	{
 		const email = Session.getActiveUser().getEmail() || '';
 		const match = email.match(/^(ba[0-9]+)\./i);
-		
+
 		if (!match)
 		{
-			throw new Error('User email not recognized for automatic database generation (expected format: baXX.*)');
+			throw new Error('User email not recognized for automatic database search (expected format: baXX.*)');
 		}
-		
+
 		const dbKey = match[1].toLowerCase();
-		
+
 		const dbs = Webapp.getUserDbs();
 		let db = dbs.find((d: { dbKey: string }) => d.dbKey === dbKey);
-		
+
 		if (db)
 		{
 			return db;
 		}
-		
+
 		db = DbManager.findDbByKey(dbKey);
 		if (db)
 		{
@@ -129,14 +129,37 @@ export const Webapp = {
 			}
 			return db;
 		}
-		
+
+		return null;
+	},
+
+	createAutoDb()
+	{
+		const email = Session.getActiveUser().getEmail() || '';
+		const match = email.match(/^(ba[0-9]+)\./i);
+
+		if (!match)
+		{
+			throw new Error('User email not recognized for automatic database creation (expected format: baXX.*)');
+		}
+
+		const dbKey = match[1].toLowerCase();
+
+		const dbs = Webapp.getUserDbs();
+		let db = dbs.find((d: { dbKey: string }) => d.dbKey === dbKey);
+
+		if (db)
+		{
+			return db;
+		}
+
 		db = DbManager.createDb(dbKey);
 		if (!dbs.some((d: { dbKey: string }) => d.dbKey === dbKey))
 		{
 			dbs.push(db);
 			Webapp.saveUserDbs(dbs);
 		}
-		
+
 		return db;
 	}
 };

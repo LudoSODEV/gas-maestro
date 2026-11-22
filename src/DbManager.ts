@@ -3,19 +3,19 @@ export class DbManager
 	static createDb(dbKey: string)
 	{
 		const normalizedDbKey = dbKey.toLowerCase();
-		
+
 		const ss = SpreadsheetApp.create('Maestro DB ' + normalizedDbKey);
 		const spreadsheetId = ss.getId();
-		
+
 		(Drive as any).Files.update({
 			properties: {
 				MAESTRO_DATABASE_KEY: normalizedDbKey
 			}
 		}, spreadsheetId);
-		
+
 		const sheets = ss.getSheets();
 		let parametersSheet: GoogleAppsScript.Spreadsheet.Sheet;
-		
+
 		if (sheets.length > 0)
 		{
 			parametersSheet = sheets[0];
@@ -25,21 +25,21 @@ export class DbManager
 		{
 			parametersSheet = ss.insertSheet('Parameters');
 		}
-		
+
 		parametersSheet.clear();
 		parametersSheet.appendRow(['Key', 'Value']);
 		parametersSheet.appendRow(['dbKey', normalizedDbKey]);
-		
+
 		const headerRange = parametersSheet.getRange(1, 1, 1, 2);
 		headerRange.setFontWeight('bold');
-		
+
 		const allSheets = ss.getSheets();
 		allSheets.forEach(sheet =>
 		{
 			const protection = sheet.protect().setDescription('Prevent accidental modifications');
 			protection.setWarningOnly(true);
 		});
-		
+
 		return {
 			dbKey: normalizedDbKey,
 			spreadsheetId: spreadsheetId
@@ -51,7 +51,7 @@ export class DbManager
 		const normalizedDbKey = dbKey.toLowerCase();
 		const query = "properties has { key='MAESTRO_DATABASE_KEY' and value='" + normalizedDbKey + "' } and trashed = false";
 		const result = (Drive as any).Files.list({ q: query });
-		
+
 		if (result && result.files && result.files.length > 0)
 		{
 			const fileItem = result.files[0];
@@ -60,7 +60,7 @@ export class DbManager
 				spreadsheetId: fileItem.id!
 			};
 		}
-		
+
 		return null;
 	}
 
@@ -69,7 +69,7 @@ export class DbManager
 		const query = "properties has { key='MAESTRO_DATABASE_KEY' } and trashed = false";
 		const result = (Drive as any).Files.list({ q: query });
 		const dbs: Array<{ dbKey: string; spreadsheetId: string }> = [];
-		
+
 		if (result && result.files)
 		{
 			result.files.forEach((item: any) =>
@@ -83,7 +83,7 @@ export class DbManager
 				}
 			});
 		}
-		
+
 		return dbs;
 	}
 
