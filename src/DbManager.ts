@@ -1,13 +1,20 @@
 export class DbManager
 {
-	static createDb(dbKey: string)
+	static createDb(dbKey: string, name?: string)
 	{
 		const normalizedDbKey = dbKey.toLowerCase();
+		const regex = /^\w{4,32}$/;
+		if (!regex.test(normalizedDbKey))
+		{
+			throw new Error(`Clé de base de données invalide "${dbKey}" (entre 4 et 32 caractères: lettres, nombres, ou tirets).`);
+		}
 
-		const ss = SpreadsheetApp.create('Maestro DB ' + normalizedDbKey);
+		const docName = name || ('Maestro DB ' + normalizedDbKey);
+		const ss = SpreadsheetApp.create(docName);
 		const spreadsheetId = ss.getId();
 
 		Drive.Files.update({
+			name: docName,
 			properties: {
 				MAESTRO_DATABASE_KEY: normalizedDbKey
 			}

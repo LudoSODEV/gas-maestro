@@ -53,6 +53,11 @@ function Maestro_createAutoDb()
 	return Webapp.createAutoDb();
 }
 
+function Maestro_getDefaultDbInfo()
+{
+	return Webapp.getDefaultDbInfo();
+}
+
 function Maestro_getActiveDbKey()
 {
 	return Webapp.getActiveDbKey();

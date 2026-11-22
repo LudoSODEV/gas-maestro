@@ -50,11 +50,51 @@ export const Webapp = {
 
 	saveUserDbs(dbs: Array<{ dbKey: string; spreadsheetId: string; name?: string }>)
 	{
+		const regex = /^[\w\.]{4,32}$/;
+		const resolvedDbs: Array<{ dbKey: string; spreadsheetId: string }> = [];
+
+		dbs.forEach(d =>
+		{
+			const normalizedDbKey = (d.dbKey || '').toLowerCase();
+			if (!regex.test(normalizedDbKey))
+			{
+				throw new Error(`Clé de base de données invalide "${d.dbKey}" (doit respecter /^[\w\\.]{4,32}$/).`);
+			}
+
+			let spreadsheetId = d.spreadsheetId ? d.spreadsheetId.trim() : '';
+
+			if (!spreadsheetId)
+			{
+				const created = DbManager.createDb(normalizedDbKey, d.name);
+				spreadsheetId = created.spreadsheetId;
+			}
+			else if (!spreadsheetId.startsWith('mock'))
+			{
+				try
+				{
+					const updateResource: any = {
+						properties: {
+							MAESTRO_DATABASE_KEY: normalizedDbKey
+						}
+					};
+					if (d.name)
+					{
+						updateResource.name = d.name;
+					}
+					Drive.Files.update(updateResource, spreadsheetId);
+				}
+				catch (e) {}
+			}
+
+			resolvedDbs.push({
+				dbKey: normalizedDbKey,
+				spreadsheetId: spreadsheetId
+			});
+		});
+
 		const props = PropertiesService.getUserProperties();
-		// Clean up transient name property before saving
-		const cleanDbs = dbs.map(d => ({ dbKey: d.dbKey, spreadsheetId: d.spreadsheetId }));
-		props.setProperty('MAESTRO_DATABASES', JSON.stringify(cleanDbs));
-		return { success: true };
+		props.setProperty('MAESTRO_DATABASES', JSON.stringify(resolvedDbs));
+		return { success: true, dbs: Webapp.getUserDbs() };
 	},
 
 	getActiveDbKey(): string
@@ -70,7 +110,7 @@ export const Webapp = {
 		{
 			return dbs[0].dbKey;
 		}
-		return 'ba13';
+		return 'demo';
 	},
 
 	setActiveDbKey(dbKey: string)
@@ -92,6 +132,15 @@ export const Webapp = {
 	getCurrentUserEmail()
 	{
 		return Session.getActiveUser().getEmail() || 'Unknown user';
+	},
+
+	getDefaultDbInfo()
+	{
+		const email = Session.getActiveUser().getEmail() || '';
+		const match = email.match(/^(ba[0-9]+)\./i);
+		const dbKey = match ? match[1].toLowerCase() : 'demo';
+		const name = 'Maestro DB ' + dbKey;
+		return { dbKey, name };
 	},
 
 	listAccessibleDbs()
