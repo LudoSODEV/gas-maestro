@@ -21,41 +21,50 @@ export class ImportManager
 
 		files.forEach(f =>
 		{
-				const blob = Utilities.newBlob(Utilities.base64Decode(f.data), f.mimeType, f.name);
-				let file: any;
+			const blob = Utilities.newBlob(Utilities.base64Decode(f.data), f.mimeType, f.name);
+			let file: any;
 
-				try
-				{
-					// Drive v3: create() instead of insert(), and 'name' instead of 'title'
-					file = Drive.Files.create({
+			try
+			{
+				file = Drive.Files.create(
+					{
 						name: f.name,
 						mimeType: 'application/vnd.google-apps.spreadsheet'
-					}, blob);
+					},
+					blob,
+					{ supportsAllDrives: true }
+				);
 			}
 			catch (err)
 			{
-				file = Drive.Files.create({
-					name: f.name
-				}, blob);
+				file = Drive.Files.create(
+					{
+						name: f.name
+					},
+					blob,
+					{ supportsAllDrives: true }
+				);
 			}
 
 			const fileId = file.id;
 
 			const introspection = ImportManager.introspectFile(fileId, f.name);
 
-			const metadata = {
-				detectedType: introspection.detectedType,
-				availableActions: introspection.availableActions,
-				originalName: f.name
-			};
-
-			// Combine trashing and property tagging into a single v3 update() call
-			Drive.Files.update({
-				trashed: true,
-				properties: {
-					MAESTRO_IMPORT_METADATA: JSON.stringify(metadata)
+			// Tag with MAESTRO_IMPORT property and trash in a single v3 update call
+			Drive.Files.update(
+				{
+					trashed: true,
+					properties: {
+						MAESTRO_IMPORT: '1'
+					}
+				},
+				fileId,
+				undefined,
+				{
+					supportsAllDrives: true,
+					fields: 'id, trashed, properties'
 				}
-			}, fileId);
+			);
 
 			results.push({
 				fileId: fileId,
@@ -73,39 +82,34 @@ export class ImportManager
 		const items: StagedItem[] = [];
 		try
 		{
-			const query = "properties has { key='MAESTRO_IMPORT_METADATA' } and trashed = true";
-			// Drive v3: Must explicitly request 'properties' in fields, otherwise it is omitted
+			const query = "properties has { key='MAESTRO_IMPORT' } and trashed = true";
 			const result = Drive.Files.list({
 				q: query,
-				fields: 'files(id, name, properties)'
+				fields: 'files(id, name, properties)',
+				supportsAllDrives: true,
+				includeItemsFromAllDrives: true
 			});
 
 			if (result && result.files)
 			{
 				result.files.forEach((file: any) =>
 				{
-					const props = file.properties || {};
-					const rawMeta = props['MAESTRO_IMPORT_METADATA'];
-					let meta: any = { detectedType: 'Inconnu / Non reconnu', availableActions: [] };
-					if (rawMeta)
-					{
-						try
-						{
-							meta = JSON.parse(rawMeta);
-						}
-						catch (e) {}
-					}
+					const fileName = file.name || 'Fichier sans nom';
+					const introspection = ImportManager.introspectFile(file.id, fileName);
 
 					items.push({
 						fileId: file.id,
-						fileName: meta.originalName || file.name || 'Fichier sans nom',
-						detectedType: meta.detectedType || 'Inconnu / Non reconnu',
-						availableActions: meta.availableActions || []
+						fileName: fileName,
+						detectedType: introspection.detectedType,
+						availableActions: introspection.availableActions
 					});
 				});
 			}
 		}
-		catch (e) {}
+		catch (e: any)
+		{
+			console.error('Erreur lors de la récupération des fichiers en attente:', e?.message || e);
+		}
 
 		return items;
 	}
@@ -257,10 +261,12 @@ export class ImportManager
 
 		try
 		{
-			// Drive v3: delete() instead of remove()
-			Drive.Files.delete(fileId);
+			Drive.Files.delete(fileId, { supportsAllDrives: true });
 		}
-		catch (e) {}
+		catch (e: any)
+		{
+			console.warn(`Impossible de supprimer le fichier temporaire ${fileId}:`, e?.message || e);
+		}
 
 		return {
 			success: true,
@@ -273,8 +279,7 @@ export class ImportManager
 	{
 		try
 		{
-			// Drive v3: delete() instead of remove()
-			Drive.Files.delete(fileId);
+			Drive.Files.delete(fileId, { supportsAllDrives: true });
 			return { success: true };
 		}
 		catch (e: any)
