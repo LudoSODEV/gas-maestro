@@ -21,55 +21,48 @@ export class ImportManager
 
 		files.forEach(f =>
 		{
-			try
-			{
 				const blob = Utilities.newBlob(Utilities.base64Decode(f.data), f.mimeType, f.name);
 				let file: any;
 
 				try
 				{
-					file = Drive.Files.insert({
-						title: f.name,
+					// Drive v3: create() instead of insert(), and 'name' instead of 'title'
+					file = Drive.Files.create({
+						name: f.name,
 						mimeType: 'application/vnd.google-apps.spreadsheet'
 					}, blob);
-				}
-				catch (err)
-				{
-					file = Drive.Files.insert({
-						title: f.name
-					}, blob);
-				}
-
-				const fileId = file.id;
-
-				// Immediately move to trash for 30-day auto-purge sandbox hygiene
-				Drive.Files.update({ trashed: true }, fileId);
-
-				const introspection = ImportManager.introspectFile(fileId, f.name);
-
-				const metadata = {
-					detectedType: introspection.detectedType,
-					availableActions: introspection.availableActions,
-					originalName: f.name
-				};
-
-				Drive.Files.update({
-					properties: {
-						MAESTRO_IMPORT_METADATA: JSON.stringify(metadata)
-					}
-				}, fileId);
-
-				results.push({
-					fileId: fileId,
-					fileName: f.name,
-					detectedType: introspection.detectedType,
-					availableActions: introspection.availableActions
-				});
 			}
-			catch (e: any)
+			catch (err)
 			{
-				// Ignore individual file errors during staging
+				file = Drive.Files.create({
+					name: f.name
+				}, blob);
 			}
+
+			const fileId = file.id;
+
+			const introspection = ImportManager.introspectFile(fileId, f.name);
+
+			const metadata = {
+				detectedType: introspection.detectedType,
+				availableActions: introspection.availableActions,
+				originalName: f.name
+			};
+
+			// Combine trashing and property tagging into a single v3 update() call
+			Drive.Files.update({
+				trashed: true,
+				properties: {
+					MAESTRO_IMPORT_METADATA: JSON.stringify(metadata)
+				}
+			}, fileId);
+
+			results.push({
+				fileId: fileId,
+				fileName: f.name,
+				detectedType: introspection.detectedType,
+				availableActions: introspection.availableActions
+			});
 		});
 
 		return results;
@@ -81,7 +74,11 @@ export class ImportManager
 		try
 		{
 			const query = "properties has { key='MAESTRO_IMPORT_METADATA' } and trashed = true";
-			const result = Drive.Files.list({ q: query });
+			// Drive v3: Must explicitly request 'properties' in fields, otherwise it is omitted
+			const result = Drive.Files.list({
+				q: query,
+				fields: 'files(id, name, properties)'
+			});
 
 			if (result && result.files)
 			{
@@ -260,7 +257,8 @@ export class ImportManager
 
 		try
 		{
-			Drive.Files.remove(fileId);
+			// Drive v3: delete() instead of remove()
+			Drive.Files.delete(fileId);
 		}
 		catch (e) {}
 
@@ -275,7 +273,8 @@ export class ImportManager
 	{
 		try
 		{
-			Drive.Files.remove(fileId);
+			// Drive v3: delete() instead of remove()
+			Drive.Files.delete(fileId);
 			return { success: true };
 		}
 		catch (e: any)
