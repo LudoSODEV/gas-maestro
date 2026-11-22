@@ -58,6 +58,10 @@
 							<svg v-if="item.id === 'profils-structures'" class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
 							</svg>
+							<!-- Importations Icon -->
+							<svg v-if="item.id === 'importations'" class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+							</svg>
 							<!-- AssoConnect Icon -->
 							<svg v-if="item.id === 'assoconnect'" class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
@@ -143,6 +147,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import DatabaseManagement from './Components/DatabaseManagement.vue'
 import StructureProfiles from './Components/StructureProfiles.vue'
+import ImportManagement from './Components/ImportManagement.vue'
 import AssoConnect from './Components/AssoConnect.vue'
 import Administration from './Components/Administration.vue'
 import { IS_DEV, googleRun } from './constants'
@@ -158,6 +163,7 @@ export default {
 		const navItems = [
 			{ id: 'gestion-dbs', label: 'Gestion des bases de données' },
 			{ id: 'profils-structures', label: 'Profils de structures' },
+			{ id: 'importations', label: 'Gestion des importations' },
 			{ id: 'assoconnect', label: 'AssoConnect' },
 			{ id: 'administration', label: 'Administration' }
 		]
@@ -167,6 +173,7 @@ export default {
 		const toolComponentMap: Record<string, any> = {
 			'gestion-dbs': DatabaseManagement,
 			'profils-structures': StructureProfiles,
+			'importations': ImportManagement,
 			'assoconnect': AssoConnect,
 			'administration': Administration
 		}

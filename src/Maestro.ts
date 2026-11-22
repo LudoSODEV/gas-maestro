@@ -2,10 +2,12 @@ import { DbManager } from './DbManager';
 import { Webapp } from './Webapp';
 import { FileSniffer } from './FileSniffers/FileSniffer';
 import { AssoConnectFileSniffer } from './FileSniffers/AssoConnectFileSniffer';
+import { ImportManager } from './ImportManager';
 
 const Maestro = {
 	DbManager,
 	Webapp,
+	ImportManager,
 	FileSniffers: {
 		FileSniffer,
 		AssoConnectFileSniffer
@@ -64,6 +66,26 @@ function Maestro_trashDb(spreadsheetId: string, dbKey?: string)
 	return Webapp.trashDb(spreadsheetId, dbKey);
 }
 
+function Maestro_stageImportFiles(files: any)
+{
+	return ImportManager.stageFiles(files);
+}
+
+function Maestro_listStagedImports()
+{
+	return ImportManager.listStagedImports();
+}
+
+function Maestro_executeImportAction(fileId: string, actionType: string, targetDbKey?: string)
+{
+	return ImportManager.executeImportAction(fileId, actionType, targetDbKey);
+}
+
+function Maestro_discardImportFile(fileId: string)
+{
+	return ImportManager.discardImportFile(fileId);
+}
+
 // Expose entry points to globalThis for Google Apps Script execution
 (globalThis as any).doGet = doGet;
 (globalThis as any).Maestro_getUserDbs = Maestro_getUserDbs;
@@ -75,3 +97,7 @@ function Maestro_trashDb(spreadsheetId: string, dbKey?: string)
 (globalThis as any).Maestro_getActiveDbKey = Maestro_getActiveDbKey;
 (globalThis as any).Maestro_setActiveDbKey = Maestro_setActiveDbKey;
 (globalThis as any).Maestro_trashDb = Maestro_trashDb;
+(globalThis as any).Maestro_stageImportFiles = Maestro_stageImportFiles;
+(globalThis as any).Maestro_listStagedImports = Maestro_listStagedImports;
+(globalThis as any).Maestro_executeImportAction = Maestro_executeImportAction;
+(globalThis as any).Maestro_discardImportFile = Maestro_discardImportFile;
