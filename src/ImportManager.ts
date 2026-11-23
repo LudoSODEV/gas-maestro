@@ -37,7 +37,7 @@ export class ImportManager
 		return Drive.Files.copy(
 			{
 				name: name,
-				mimeType: 'application/vnd.google-apps.spreadsheet',
+				mimeType: MimeType.GOOGLE_SHEETS,
 				properties: {
 					MAESTRO_IMPORT: '1'
 				}
@@ -67,7 +67,7 @@ export class ImportManager
 		return Drive.Files.create(
 			{
 				name: name,
-				mimeType: 'application/vnd.google-apps.spreadsheet',
+				mimeType: MimeType.GOOGLE_SHEETS,
 				properties: {
 					MAESTRO_IMPORT: '1'
 				}
