@@ -11,6 +11,74 @@ export interface StagedItem
 
 export class ImportManager
 {
+	static isExcelSpreadsheet(mimeType: string): boolean
+	{
+		const lower = (mimeType || '').toLowerCase();
+		return lower.includes('excel') || lower.includes('spreadsheetml');
+	}
+
+	static createBinaryTempFile(blob: GoogleAppsScript.Base.Blob, name: string, mimeType: string): string
+	{
+		const file = Drive.Files.create(
+			{
+				name: name,
+				mimeType: mimeType
+			},
+			blob,
+			{
+				fields: 'id'
+			}
+		);
+		return file.id!;
+	}
+
+	static convertExcelToGoogleSheets(tempFileId: string, name: string): any
+	{
+		return Drive.Files.copy(
+			{
+				name: name,
+				mimeType: 'application/vnd.google-apps.spreadsheet',
+				properties: {
+					MAESTRO_IMPORT: '1'
+				}
+			},
+			tempFileId,
+			{
+				fields: 'id, name, createdTime, properties'
+			}
+		);
+	}
+
+	static createStagedSpreadsheet(blob: GoogleAppsScript.Base.Blob, name: string, mimeType: string): any
+	{
+		if (ImportManager.isExcelSpreadsheet(mimeType))
+		{
+			const tempFileId = ImportManager.createBinaryTempFile(blob, name, mimeType);
+			try
+			{
+				return ImportManager.convertExcelToGoogleSheets(tempFileId, name);
+			}
+			finally
+			{
+				Drive.Files.remove(tempFileId);
+			}
+		}
+
+		return Drive.Files.create(
+			{
+				name: name,
+				mimeType: 'application/vnd.google-apps.spreadsheet',
+				properties: {
+					MAESTRO_IMPORT: '1'
+				}
+			},
+			blob,
+			{
+				fields: 'id, name, createdTime, properties'
+			}
+		);
+	}
+
 	static stageFiles(files: Array<{ name: string; mimeType: string; data: string }>): StagedItem[]
 	{
 		const results: StagedItem[] = [];
@@ -23,39 +91,7 @@ export class ImportManager
 		files.forEach(f =>
 		{
 			const blob = Utilities.newBlob(Utilities.base64Decode(f.data), f.mimeType, f.name);
-			let file: any;
-
-			try
-			{
-				file = Drive.Files.create(
-					{
-						name: f.name,
-						mimeType: 'application/vnd.google-apps.spreadsheet',
-						properties: {
-							MAESTRO_IMPORT: '1'
-						}
-					},
-					blob,
-					{
-						fields: 'id, name, createdTime, properties'
-					}
-				);
-			}
-			catch (err)
-			{
-				file = Drive.Files.create(
-					{
-						name: f.name,
-						properties: {
-							MAESTRO_IMPORT: '1'
-						}
-					},
-					blob,
-					{
-						fields: 'id, name, createdTime, properties'
-					}
-				);
-			}
+			const file = ImportManager.createStagedSpreadsheet(blob, f.name, f.mimeType);
 
 			const fileId = file.id;
 			const createdTime = file.createdTime || new Date().toISOString();
@@ -117,79 +153,136 @@ export class ImportManager
 		return items;
 	}
 
+	static detectAssoConnectType(sheets: GoogleAppsScript.Spreadsheet.Sheet[], lowerName: string): { detectedType: string; availableActions: Array<{ type: string; label: string }> } | null
+	{
+		const sheetNames = sheets.map(s => s.getName());
+		const hasExport1 = sheetNames.some(n => n.toLowerCase().includes('export 1') || n.toLowerCase().includes('assoconnect'));
+		if (!hasExport1 && !lowerName.includes('assoconnect') && !lowerName.includes('export'))
+		{
+			return null;
+		}
+
+		const sheet = sheets[0];
+		const data = sheet.getDataRange().getValues();
+		let headerRow: string[] = [];
+		if (data.length > 0)
+		{
+			headerRow = data[0].map(cell => String(cell).toLowerCase());
+		}
+
+		const isStructure = headerRow.some(h => h.includes('siret') || h.includes('car') || h.includes('structure') || h.includes('antenne'));
+		const isMember = headerRow.some(h => h.includes('adhérent') || h.includes('prenom') || h.includes('prénom') || h.includes('cotisation'));
+
+		if (isStructure || (!isMember && lowerName.includes('structure')))
+		{
+			return {
+				detectedType: 'AssoConnect (Structures)',
+				availableActions: [{
+					type: 'IMPORT_ASSOCONNECT_STRUCTURES',
+					label: 'Import AssoConnect structures'
+				}]
+			};
+		}
+
+		return {
+			detectedType: 'AssoConnect (Membres / Autre)',
+			availableActions: [{
+				type: 'IMPORT_ASSOCONNECT_MEMBERS',
+				label: 'Import AssoConnect membres'
+			}]
+		};
+	}
+
+	static detectCollecteType(sheets: GoogleAppsScript.Spreadsheet.Sheet[], lowerName: string): { detectedType: string; availableActions: Array<{ type: string; label: string }> } | null
+	{
+		const sheetNames = sheets.map(s => s.getName());
+		const isCollecte = lowerName.includes('collecte') || sheetNames.some(n => n.toLowerCase().includes('collecte') || n.toLowerCase().includes('inscription'));
+		if (!isCollecte)
+		{
+			return null;
+		}
+
+		return {
+			detectedType: 'Application Collecte (Inscriptions)',
+			availableActions: [{
+				type: 'IMPORT_COLLECTE_INSCRIPTIONS',
+				label: 'Import Collecte (Inscriptions)'
+			}]
+		};
+	}
+
+	static detectGenericSpreadsheetType(sheets: GoogleAppsScript.Spreadsheet.Sheet[]): { detectedType: string; availableActions: Array<{ type: string; label: string }> } | null
+	{
+		if (sheets.length === 0)
+		{
+			return null;
+		}
+
+		return {
+			detectedType: 'Fichier Tableur Général',
+			availableActions: [{
+				type: 'IMPORT_GENERIC_SPREADSHEET',
+				label: 'Importer dans la base active'
+			}]
+		};
+	}
+
+	static detectCsvType(lowerName: string): { detectedType: string; availableActions: Array<{ type: string; label: string }> }
+	{
+		if (lowerName.endsWith('.csv') || lowerName.endsWith('.txt'))
+		{
+			return {
+				detectedType: 'Fichier Texte / CSV',
+				availableActions: [{
+					type: 'IMPORT_GENERIC_CSV',
+					label: 'Importer fichier texte/CSV'
+				}]
+			};
+		}
+
+		return {
+			detectedType: 'Inconnu / Non reconnu',
+			availableActions: []
+		};
+	}
+
+	static introspectSpreadsheet(fileId: string, lowerName: string): { detectedType: string; availableActions: Array<{ type: string; label: string }> }
+	{
+		const ss = SpreadsheetApp.openById(fileId);
+		const sheets = ss.getSheets();
+
+		const assoConnectResult = ImportManager.detectAssoConnectType(sheets, lowerName);
+		if (assoConnectResult)
+		{
+			return assoConnectResult;
+		}
+
+		const collecteResult = ImportManager.detectCollecteType(sheets, lowerName);
+		if (collecteResult)
+		{
+			return collecteResult;
+		}
+
+		const genericResult = ImportManager.detectGenericSpreadsheetType(sheets);
+		if (genericResult)
+		{
+			return genericResult;
+		}
+
+		return ImportManager.detectCsvType(lowerName);
+	}
+
 	static introspectFile(fileId: string, fileName: string): { detectedType: string; availableActions: Array<{ type: string; label: string }> }
 	{
 		const lowerName = fileName.toLowerCase();
-		let detectedType = 'Inconnu / Non reconnu';
-		let availableActions: Array<{ type: string; label: string }> = [];
-
 		try
 		{
-			const ss = SpreadsheetApp.openById(fileId);
-			const sheets = ss.getSheets();
-			const sheetNames = sheets.map(s => s.getName());
-
-			const hasExport1 = sheetNames.some(n => n.toLowerCase().includes('export 1') || n.toLowerCase().includes('assoconnect'));
-			if (hasExport1 || lowerName.includes('assoconnect') || lowerName.includes('export'))
-			{
-				const sheet = sheets[0];
-				const data = sheet.getDataRange().getValues();
-				let headerRow: string[] = [];
-				if (data.length > 0)
-				{
-					headerRow = data[0].map(cell => String(cell).toLowerCase());
-				}
-
-				const isStructure = headerRow.some(h => h.includes('siret') || h.includes('car') || h.includes('structure') || h.includes('antenne'));
-				const isMember = headerRow.some(h => h.includes('adhérent') || h.includes('prenom') || h.includes('prénom') || h.includes('cotisation'));
-
-				if (isStructure || (!isMember && lowerName.includes('structure')))
-				{
-					detectedType = 'AssoConnect (Structures)';
-					availableActions.push({
-						type: 'IMPORT_ASSOCONNECT_STRUCTURES',
-						label: 'Import AssoConnect structures'
-					});
-				}
-				else
-				{
-					detectedType = 'AssoConnect (Membres / Autre)';
-					availableActions.push({
-						type: 'IMPORT_ASSOCONNECT_MEMBERS',
-						label: 'Import AssoConnect membres'
-					});
-				}
-			}
-			else if (lowerName.includes('collecte') || sheetNames.some(n => n.toLowerCase().includes('collecte') || n.toLowerCase().includes('inscription')))
-			{
-				detectedType = 'Application Collecte (Inscriptions)';
-				availableActions.push({
-					type: 'IMPORT_COLLECTE_INSCRIPTIONS',
-					label: 'Import Collecte (Inscriptions)'
-				});
-			}
-			else if (sheets.length > 0)
-			{
-				detectedType = 'Fichier Tableur Général';
-				availableActions.push({
-					type: 'IMPORT_GENERIC_SPREADSHEET',
-					label: 'Importer dans la base active'
-				});
-			}
+			return ImportManager.introspectSpreadsheet(fileId, lowerName);
 		}
 		catch (e)
 		{
-			if (lowerName.endsWith('.csv') || lowerName.endsWith('.txt'))
-			{
-				detectedType = 'Fichier Texte / CSV';
-				availableActions.push({
-					type: 'IMPORT_GENERIC_CSV',
-					label: 'Importer fichier texte/CSV'
-				});
-			}
+			return ImportManager.detectCsvType(lowerName);
 		}
-
-		return { detectedType, availableActions };
 	}
 
 	static executeImportAction(fileId: string, actionType: string, targetDbKey?: string)
