@@ -14,7 +14,7 @@ export class ImportManager
 	static isExcelSpreadsheet(mimeType: string): boolean
 	{
 		const lower = (mimeType || '').toLowerCase();
-		return lower.includes('excel') || lower.includes('spreadsheetml');
+		return mimeType === MimeType.MICROSOFT_EXCEL || lower.includes('excel') || lower.includes('spreadsheetml');
 	}
 
 	static createBinaryTempFile(blob: GoogleAppsScript.Base.Blob, name: string, mimeType: string): string
@@ -64,10 +64,14 @@ export class ImportManager
 			}
 		}
 
+		const targetMimeType = (mimeType || '').toLowerCase().includes('spreadsheet') || mimeType === MimeType.GOOGLE_SHEETS
+			? MimeType.GOOGLE_SHEETS
+			: mimeType;
+
 		return Drive.Files.create(
 			{
 				name: name,
-				mimeType: MimeType.GOOGLE_SHEETS,
+				mimeType: targetMimeType,
 				properties: {
 					MAESTRO_IMPORT: '1'
 				}
@@ -77,6 +81,34 @@ export class ImportManager
 				fields: 'id, name, createdTime, properties'
 			}
 		);
+	}
+
+	static stageFile(f: { name: string; mimeType: string; data: string }): StagedItem
+	{
+		const blob = Utilities.newBlob(Utilities.base64Decode(f.data), f.mimeType, f.name);
+		const file = ImportManager.createStagedSpreadsheet(blob, f.name, f.mimeType);
+
+		const fileId = file.id;
+		const createdTime = file.createdTime || new Date().toISOString();
+
+		const introspection = ImportManager.introspectFile(fileId, f.name);
+
+		// Move to trash after creation and introspection
+		Drive.Files.update(
+			{
+				trashed: true
+			},
+			fileId,
+			null
+		);
+
+		return {
+			fileId: fileId,
+			fileName: f.name,
+			detectedType: introspection.detectedType,
+			createdTime: createdTime,
+			availableActions: introspection.availableActions
+		};
 	}
 
 	static stageFiles(files: Array<{ name: string; mimeType: string; data: string }>): StagedItem[]
@@ -90,30 +122,7 @@ export class ImportManager
 
 		files.forEach(f =>
 		{
-			const blob = Utilities.newBlob(Utilities.base64Decode(f.data), f.mimeType, f.name);
-			const file = ImportManager.createStagedSpreadsheet(blob, f.name, f.mimeType);
-
-			const fileId = file.id;
-			const createdTime = file.createdTime || new Date().toISOString();
-
-			const introspection = ImportManager.introspectFile(fileId, f.name);
-
-			// Move to trash after creation and introspection
-			Drive.Files.update(
-				{
-					trashed: true
-				},
-				fileId,
-				null
-			);
-
-			results.push({
-				fileId: fileId,
-				fileName: f.name,
-				detectedType: introspection.detectedType,
-				createdTime: createdTime,
-				availableActions: introspection.availableActions
-			});
+			results.push(ImportManager.stageFile(f));
 		});
 
 		return results;
