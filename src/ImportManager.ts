@@ -1,4 +1,5 @@
 import { DbManager } from './DbManager';
+import { AssoConnectImporter } from './AssoConnect/AssoConnectImporter';
 
 export interface StagedItem
 {
@@ -296,6 +297,15 @@ export class ImportManager
 
 	static executeImportAction(fileId: string, actionType: string, targetDbKey?: string)
 	{
+		if (actionType === 'IMPORT_ASSOCONNECT_STRUCTURES')
+		{
+			return AssoConnectImporter.importStructures(fileId);
+		}
+		else if (actionType === 'IMPORT_ASSOCONNECT_MEMBERS' || actionType === 'IMPORT_ASSOCONNECT_USERS')
+		{
+			return AssoConnectImporter.importUsers(fileId);
+		}
+
 		let targetSpreadsheetId = '';
 		const dbs = DbManager.listAccessibleDbs();
 		if (targetDbKey)
