@@ -1,4 +1,4 @@
-import { AbstractFileSniffer } from '../FileSniffer';
+import { AbstractFileSniffer } from '../AbstractFileSniffer';
 
 export class AssoConnectFileSniffer extends AbstractFileSniffer
 {

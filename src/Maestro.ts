@@ -1,7 +1,7 @@
 import { DbManager } from './DbManager';
 import { Db } from './db';
 import { Webapp } from './Webapp';
-import { AbstractFileSniffer } from './FileSniffer';
+import { AbstractFileSniffer } from './AbstractFileSniffer';
 import { AssoConnectFileSniffer } from './AssoConnect/FileSniffer';
 import { ImportManager } from './ImportManager';
 import { Session } from './Session';
