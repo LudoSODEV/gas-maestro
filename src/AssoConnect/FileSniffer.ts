@@ -1,4 +1,4 @@
-import { FileSniffer } from './FileSniffer';
+import { FileSniffer } from '../file-sniffer';
 
 export class AssoConnectFileSniffer extends FileSniffer
 {
