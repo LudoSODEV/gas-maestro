@@ -1,7 +1,7 @@
 import { DbManager } from './DbManager';
 import { Db } from './db';
 import { Webapp } from './Webapp';
-import { FileSniffer } from './file-sniffer';
+import { AbstractFileSniffer } from './FileSniffer';
 import { AssoConnectFileSniffer } from './AssoConnect/FileSniffer';
 import { ImportManager } from './ImportManager';
 import { Session } from './Session';
@@ -13,7 +13,7 @@ const Maestro = {
 	ImportManager,
 	Session,
 	FileSniffers: {
-		FileSniffer,
+		AbstractFileSniffer,
 		AssoConnectFileSniffer
 	}
 };

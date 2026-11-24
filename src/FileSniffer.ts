@@ -1,4 +1,4 @@
-export class FileSniffer
+export abstract class AbstractFileSniffer
 {
 	getAvailableActions(file: GoogleAppsScript.Drive.File): string[]
 	{

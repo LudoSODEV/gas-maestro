@@ -1,6 +1,6 @@
-import { FileSniffer } from '../file-sniffer';
+import { AbstractFileSniffer } from '../FileSniffer';
 
-export class AssoConnectFileSniffer extends FileSniffer
+export class AssoConnectFileSniffer extends AbstractFileSniffer
 {
 	getAvailableActions(file: GoogleAppsScript.Drive.File): string[]
 	{
