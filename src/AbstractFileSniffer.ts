@@ -1,7 +1,16 @@
+export interface FileAction
+{
+	type: string;
+	label: string;
+}
+
+export interface SniffResult
+{
+	detectedType: string;
+	availableActions: FileAction[];
+}
+
 export abstract class AbstractFileSniffer
 {
-	getAvailableActions(file: GoogleAppsScript.Drive.File): string[]
-	{
-		throw new Error('Method getAvailableActions() must be implemented by concrete file sniffers.');
-	}
+	abstract sniff(fileId: string, fileName: string): SniffResult | null;
 }

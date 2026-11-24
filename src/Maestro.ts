@@ -3,6 +3,9 @@ import { Db } from './db';
 import { Webapp } from './Webapp';
 import { AbstractFileSniffer } from './AbstractFileSniffer';
 import { AssoConnectFileSniffer } from './AssoConnect/FileSniffer';
+import { CollecteFileSniffer } from './collecte-file-sniffer';
+import { GenericSpreadsheetFileSniffer } from './generic-spreadsheet-file-sniffer';
+import { CsvFileSniffer } from './csv-file-sniffer';
 import { ImportManager } from './ImportManager';
 import { Session } from './Session';
 
@@ -14,7 +17,10 @@ const Maestro = {
 	Session,
 	FileSniffers: {
 		AbstractFileSniffer,
-		AssoConnectFileSniffer
+		AssoConnectFileSniffer,
+		CollecteFileSniffer,
+		GenericSpreadsheetFileSniffer,
+		CsvFileSniffer
 	}
 };
 
