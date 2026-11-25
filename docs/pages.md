@@ -12,7 +12,7 @@ Every page in the application shares a consistent layout shell containing persis
 
 - **Header / Top Bar**:
   - **Logged-in User Indicator**: Displays the currently authenticated Google Workspace account (e.g., `Utilisateur connecté: user@banquealimentaire.org`).
-  - **Active Database Indicator**: Displays the currently selected active database (e.g., `Base de données active: BA13`).
+  - **Active Database Indicator**: Displays the currently selected active database (e.g., `Base de données active: DEMO`).
 - **Sidebar Navigation (Menu principal)**:
   - **Gestion des bases de données** (Database Management)
   - **Profils de structures** (Structure Profiles)
@@ -40,8 +40,8 @@ Displays all configured and discovered databases associated with the user accoun
 
 | Colonne (Column) | Description | Actions / Interactivity |
 | :--- | :--- | :--- |
-| **Nom de la base** | Display name (e.g., `BA13`) | Link to open backing Google Sheets spreadsheet in a new tab (`Ouvrir`). |
-| **Clé (Key)** | Identifier (e.g., `ba13`) | Read-only badge. |
+| **Nom de la base** | Display name (e.g., `DEMO`) | Link to open backing Google Sheets spreadsheet in a new tab (`Ouvrir`). |
+| **Clé (Key)** | Identifier (e.g., `demo`) | Read-only badge. |
 | **Identifiant du fichier** | Google Drive Spreadsheet ID | Read-only snippet. |
 | **Statut actif** | Indicates if currently selected | Selection option / Radio / Button: `Sélectionner` (Set as active database). |
 | **Actions** | Record management | Button: `Supprimer` (Remove from local user properties). |

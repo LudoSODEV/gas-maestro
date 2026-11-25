@@ -94,7 +94,7 @@ Databases are saved per user as a JSON array string under the property key `MAES
 ```json
 [
   {
-    "dbKey": "ba13",
+    "dbKey": "demo",
     "dbId": "1aB2c3D4e5F6g7H8i9J0_example_id_1"
   },
   {

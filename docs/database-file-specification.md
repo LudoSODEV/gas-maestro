@@ -18,10 +18,10 @@ A DB file in **Maestro** is a dedicated Google Sheet acting as the primary local
 ### 1. Identification & Relationship
 - **Document Reference**: Identified and referred to by its Google Sheet document ID.
 - **Database Association**: The DB is related via `dbKey`. The `dbKey` usually matches `/^ba\d{3}$/`, although exceptions may exist.
-- **Naming Convention**: `Maestro DB $key` (e.g., `Maestro DB ba13`).
+- **Naming Convention**: `Maestro DB $key` (e.g., `Maestro DB demo`).
 - **Drive File Properties**: Tagged with a custom public Drive property:
   - Key: `MAESTRO_DATABASE_KEY`
-  - Value: The normalized database identifier (e.g., `ba13`, `ba83`).
+  - Value: The normalized database identifier (e.g., `demo`, `ba83`).
   - **Uniqueness Note**: Because there is no centralized authority that manages databases and each user is fully in control of their data, there is no guarantee of uniqueness for this key value.
 
 ### 2. Sheet Structure & Initial State
@@ -37,7 +37,7 @@ A DB file in **Maestro** is a dedicated Google Sheet acting as the primary local
   ```json
   [
     {
-      "dbKey": "ba13",
+      "dbKey": "demo",
       "dbId": "1aB2c3D4e5F6g7H8i9J0_example_id"
     }
   ]

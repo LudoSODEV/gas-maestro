@@ -11,13 +11,13 @@ Every page in Maestro must render a unified global header at the top of the view
 
 ### A. Current User Identity
 - **Display Content**: The minimum readily available authenticated user metadata from Google Apps Script (`Session.getActiveUser().getEmail()`).
-- **Format**: Plain text label indicating the active user (e.g., `Utilisateur connecté: user@ba13.banquealimentaire.org`).
+- **Format**: Plain text label indicating the active user (e.g., `Utilisateur connecté: user@example.org`).
 - **Rationale**: Confirms immediately under which Google Workspace account and OAuth scope actions are executing.
 
 ### B. Active Database Indicator & Quick Management Link
-- **Display Content**: The active database key (`dbKey`), prominently indicating the current data context (e.g., `Base active: ba13`).
+- **Display Content**: The active database key (`dbKey`), prominently indicating the current data context (e.g., `Base active: demo`).
 - **Quick Action / Link**: A dedicated icon link (⚙️ or spreadsheet icon) placed next to the active database label. Clicking this link immediately routes the user to the **Database Management** page (`Gestion des bases de données`).
-- **UX Realism**: While Maestro natively supports Multi-DB mapping for administrators or multi-branch managers, **the overwhelming majority of users will only ever use a single default database** (automatically provisioned via their email prefix, e.g., `ba13`). Therefore, the active database indicator remains compact and non-intrusive, while remaining instantly accessible for inspection or switching.
+- **UX Realism**: While Maestro natively supports Multi-DB mapping for administrators or multi-branch managers, **the overwhelming majority of users will only ever use a single default database** (automatically provisioned via their email prefix, e.g., `demo`). Therefore, the active database indicator remains compact and non-intrusive, while remaining instantly accessible for inspection or switching.
 
 ---
 
@@ -26,7 +26,7 @@ Every page in Maestro must render a unified global header at the top of the view
 ```
 +-----------------------------------------------------------------------------------+
 |  MAESTRO - Centre de Contrôle                                                     |
-|  [Utilisateur: user@ba13.org]   [Base active: ba13 (⚙️ Gérer)]                    |
+|  [Utilisateur: user@example.org]   [Base active: demo (⚙️ Gérer)]                    |
 +-----------------------------------------------------------------------------------+
 |  [Sidebar Navigation]         |  [Main Content Area]                              |
 |  - Menu Principal             |                                                   |

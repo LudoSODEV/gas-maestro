@@ -1,1 +1,1 @@
-- Replace "ba13" with "demo" in db management view
+- [x] Replace "ba13" with "demo" in db management view and across all placeholders

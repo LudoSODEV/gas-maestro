@@ -137,8 +137,8 @@ export const Webapp = {
 	getDefaultDbInfo()
 	{
 		const email = Session.getActiveUser().getEmail() || '';
-		const match = email.match(/^(ba[0-9]+)\./i);
-		const dbKey = match ? match[1].toLowerCase() : 'ba13';
+		const match = email.match(/^(ba[0-9]+|demo|[a-z0-9]+)\./i);
+		const dbKey = match ? match[1].toLowerCase() : 'demo';
 		const name = 'Maestro DB ' + dbKey;
 		return { dbKey, name };
 	},
@@ -155,7 +155,7 @@ export const Webapp = {
 
 		if (!match)
 		{
-			throw new Error('User email not recognized for automatic database search (expected format: baXX.*)');
+			throw new Error('User email not recognized for automatic database search (expected format: baXXX.*)');
 		}
 
 		const dbKey = match[1].toLowerCase();
@@ -190,8 +190,8 @@ export const Webapp = {
 		if (!dbKey)
 		{
 			const email = Session.getActiveUser().getEmail() || '';
-			const match = email.match(/^(ba[0-9]+)\./i);
-			dbKey = match ? match[1].toLowerCase() : 'ba13';
+			const match = email.match(/^(ba[0-9]+|demo|[a-z0-9]+)\./i);
+			dbKey = match ? match[1].toLowerCase() : 'demo';
 		}
 
 		dbKey = dbKey.toLowerCase();

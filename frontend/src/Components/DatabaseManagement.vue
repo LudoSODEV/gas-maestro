@@ -60,11 +60,11 @@
 				<p class="description">Définissez la clé (dbKey) et le nom du document Google Drive pour la nouvelle base.</p>
 				<div class="form-group" style="margin-bottom: 16px;">
 					<label style="display: block; font-weight: 500; margin-bottom: 6px; font-size: 14px;">Clé de base (dbKey)</label>
-					<input v-model="newDbForm.dbKey" type="text" placeholder="ex: ba13" />
+					<input v-model="newDbForm.dbKey" type="text" placeholder="ex: demo" />
 				</div>
 				<div class="form-group" style="margin-bottom: 16px;">
 					<label style="display: block; font-weight: 500; margin-bottom: 6px; font-size: 14px;">Nom du document Google Drive</label>
-					<input v-model="newDbForm.name" type="text" placeholder="ex: Maestro DB BA13" />
+					<input v-model="newDbForm.name" type="text" placeholder="ex: Maestro DB DEMO" />
 				</div>
 				<div class="modal-actions">
 					<button class="primary" @click="confirmCreateDb" style="background: #2b6cb0;">Créer</button>
@@ -109,7 +109,7 @@ export default {
 	setup()
 	{
 		const dbs = ref<DatabaseItem[]>([])
-		const activeDbKey = ref('ba13')
+		const activeDbKey = ref('demo')
 		const loading = ref(true)
 		const statusMessage = ref('')
 		const statusColor = ref('green')
@@ -119,8 +119,8 @@ export default {
 
 		const showCreateDialog = ref(false)
 		const newDbForm = ref({
-			dbKey: 'ba13',
-			name: 'Maestro DB BA13'
+			dbKey: 'demo',
+			name: 'Maestro DB DEMO'
 		})
 
 		const loadDbs = () =>
@@ -198,8 +198,8 @@ export default {
 					if (info)
 					{
 						newDbForm.value = {
-							dbKey: info.dbKey || 'ba13',
-							name: info.name || 'Maestro DB BA13'
+							dbKey: info.dbKey || 'demo',
+							name: info.name || 'Maestro DB DEMO'
 						}
 					}
 					showCreateDialog.value = true
@@ -207,8 +207,8 @@ export default {
 				.withFailureHandler(() =>
 				{
 					newDbForm.value = {
-						dbKey: 'ba13',
-						name: 'Maestro DB BA13'
+						dbKey: 'demo',
+						name: 'Maestro DB DEMO'
 					}
 					showCreateDialog.value = true
 				})

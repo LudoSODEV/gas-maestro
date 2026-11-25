@@ -434,7 +434,7 @@
                                 Profils de structures
                             </h1>
                             <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200">
-                                {{ activeDatabase ? activeDatabase.name : 'BA13' }}
+                                {{ activeDatabase ? activeDatabase.name : 'DEMO' }}
                             </span>
                         </div>
                         <p class="mt-1.5 text-sm sm:text-base text-slate-600">
@@ -759,9 +759,9 @@
             const databases = ref([
                 {
                     id: 1,
-                    name: 'BA13',
-                    key: 'ba13',
-                    region: 'Banque Alimentaire des Bouches-du-Rhône',
+                    name: 'DEMO',
+                    key: 'demo',
+                    region: 'Base de démonstration Maestro',
                     fileId: '1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms'
                 },
                 {
@@ -787,7 +787,7 @@
                 }
             ]);
 
-            const activeDatabaseId = ref(1); // BA13 active by default
+            const activeDatabaseId = ref(1); // DEMO active by default
 
             const activeDatabase = computed(() => {
                 return databases.value.find(db => db.id === activeDatabaseId.value) || null;

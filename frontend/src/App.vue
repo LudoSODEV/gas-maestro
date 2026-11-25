@@ -157,7 +157,7 @@ export default {
 	setup()
 	{
 		const currentUserEmail = ref('Chargement...')
-		const activeDbKey = ref('ba13')
+		const activeDbKey = ref('demo')
 		const isMobileMenuOpen = ref(false)
 
 		const navItems = [
@@ -207,7 +207,7 @@ export default {
 				{
 					if (Array.isArray(dbs) && dbs.length > 0)
 					{
-						activeDbKey.value = dbs[0].dbKey || 'ba13'
+						activeDbKey.value = dbs[0].dbKey || 'demo'
 					}
 				})
 				.withFailureHandler(() => {})
