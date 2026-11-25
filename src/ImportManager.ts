@@ -210,27 +210,27 @@ export class ImportManager
 			return AssoConnectImporter.importUsers(fileId);
 		}
 
-		let targetSpreadsheetId = '';
+		let targetDbId = '';
 		const dbs = DbManager.listAccessibleDbs();
 		if (targetDbKey)
 		{
 			const found = dbs.find(d => d.dbKey === targetDbKey.toLowerCase());
 			if (found)
 			{
-				targetSpreadsheetId = found.spreadsheetId;
+				targetDbId = found.dbId;
 			}
 		}
-		if (!targetSpreadsheetId && dbs.length > 0)
+		if (!targetDbId && dbs.length > 0)
 		{
-			targetSpreadsheetId = dbs[0].spreadsheetId;
+			targetDbId = dbs[0].dbId;
 		}
 
-		if (!targetSpreadsheetId)
+		if (!targetDbId)
 		{
 			throw new Error('Aucune base de données cible trouvée pour effectuer l\'importation.');
 		}
 
-		const targetSs = SpreadsheetApp.openById(targetSpreadsheetId);
+		const targetSs = SpreadsheetApp.openById(targetDbId);
 
 		let sourceSheetName = actionType;
 		if (actionType === 'IMPORT_ASSOCONNECT_STRUCTURES')

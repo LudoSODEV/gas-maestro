@@ -40,7 +40,7 @@ export class DbTable
 
 export class Db
 {
-	constructor(private spreadsheetId: string)
+	constructor(public readonly dbId: string)
 	{
 		(this as any).spreadsheet = null;
 	}
@@ -50,7 +50,7 @@ export class Db
 		let spreadsheet: GoogleAppsScript.Spreadsheet.Spreadsheet | null = (this as any).spreadsheet;
 		if (!spreadsheet)
 		{
-			spreadsheet = SpreadsheetApp.openById(this.spreadsheetId);
+			spreadsheet = SpreadsheetApp.openById(this.dbId);
 			(this as any).spreadsheet = spreadsheet;
 		}
 		return spreadsheet;

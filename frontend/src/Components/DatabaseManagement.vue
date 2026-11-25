@@ -11,7 +11,7 @@
 					<tr>
 						<th>Nom de la base (dbKey)</th>
 						<th>Nom Google Drive</th>
-						<th>Identifiant du fichier (Spreadsheet ID)</th>
+						<th>Identifiant de la base (dbId)</th>
 						<th>Actions</th>
 					</tr>
 				</thead>
@@ -24,11 +24,11 @@
 							<input v-model="db.name" type="text" />
 						</td>
 						<td>
-							<input v-model="db.spreadsheetId" type="text" style="width: 250px;" />
+							<input v-model="db.dbId" type="text" style="width: 250px;" />
 						</td>
 						<td>
 							<div class="actions-cell">
-								<a v-if="db.spreadsheetId && !db.spreadsheetId.startsWith('mock')" :href="'https://docs.google.com/spreadsheets/d/' + db.spreadsheetId" target="_blank" class="btn-link" title="Ouvrir le fichier">Ouvrir</a>
+								<a v-if="db.dbId && !db.dbId.startsWith('mock')" :href="'https://docs.google.com/spreadsheets/d/' + db.dbId" target="_blank" class="btn-link" title="Ouvrir le fichier">Ouvrir</a>
 								
 								<button v-if="dbs.length > 1 && db.dbKey !== activeDbKey" class="select-btn" @click="selectDb(db.dbKey)" title="Définir comme base active">Sélectionner</button>
 								<span v-else-if="db.dbKey === activeDbKey" class="active-badge">Active</span>
@@ -85,7 +85,7 @@
 					<li>Ou utiliser le bouton ci-dessous pour placer automatiquement le fichier dans la corbeille via l'API Google Drive.</li>
 				</ol>
 				<div class="modal-actions">
-					<a v-if="dbToDelete?.spreadsheetId && !dbToDelete?.spreadsheetId.startsWith('mock')" :href="'https://docs.google.com/spreadsheets/d/' + dbToDelete.spreadsheetId" target="_blank" class="btn-link">Ouvrir le fichier</a>
+					<a v-if="dbToDelete?.dbId && !dbToDelete?.dbId.startsWith('mock')" :href="'https://docs.google.com/spreadsheets/d/' + dbToDelete.dbId" target="_blank" class="btn-link">Ouvrir le fichier</a>
 					<button class="danger" @click="confirmTrashDb">Mettre à la corbeille via l'API</button>
 					<button class="secondary" @click="closeDeleteDialog">Annuler</button>
 				</div>
@@ -101,7 +101,7 @@ import { googleRun } from '../constants'
 interface DatabaseItem {
 	dbKey: string;
 	name?: string;
-	spreadsheetId: string;
+	dbId: string;
 }
 
 export default {
@@ -270,7 +270,7 @@ export default {
 			googleRun()
 				.withSuccessHandler(() =>
 				{
-					dbs.value = dbs.value.filter(d => d.spreadsheetId !== target.spreadsheetId && d.dbKey !== target.dbKey)
+					dbs.value = dbs.value.filter(d => d.dbId !== target.dbId && d.dbKey !== target.dbKey)
 					statusMessage.value = `Base ${target.dbKey} placée à la corbeille et supprimée de la liste.`
 					statusColor.value = 'green'
 				})
@@ -279,7 +279,7 @@ export default {
 					statusMessage.value = 'Erreur lors de la suppression: ' + err.message
 					statusColor.value = 'red'
 				})
-				.Maestro_trashDb(target.spreadsheetId, target.dbKey)
+				.Maestro_trashDb(target.dbId, target.dbKey)
 		}
 
 		const saveDbs = () =>

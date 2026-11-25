@@ -1,5 +1,8 @@
-import { DbManager } from './DbManager';
 import { Webapp } from './Webapp';
+import { Db } from './db';
+
+let cachedDb: Db | null = null;
+let cachedDbId: string | null = null;
 
 export class Session
 {
@@ -18,47 +21,56 @@ export class Session
 		Webapp.setActiveDbKey(dbKey);
 		const dbs = Webapp.getUserDbs();
 		const found = dbs.find(d => d.dbKey.toLowerCase() === dbKey.toLowerCase());
-		if (found && found.spreadsheetId)
+		if (found && found.dbId)
 		{
-			PropertiesService.getUserProperties().setProperty('MAESTRO_ACTIVE_SPREADSHEET', found.spreadsheetId);
+			PropertiesService.getUserProperties().setProperty('MAESTRO_ACTIVE_DB_ID', found.dbId);
 		}
+		cachedDb = null;
+		cachedDbId = null;
 	}
 
-	static getActiveSpreadsheetId(): string
+	static getActiveDbId(): string
 	{
 		const props = PropertiesService.getUserProperties();
-		const activeSpreadsheetId = props.getProperty('MAESTRO_ACTIVE_SPREADSHEET');
-		if (activeSpreadsheetId)
+		let activeDbId = props.getProperty('MAESTRO_ACTIVE_DB_ID') || props.getProperty('MAESTRO_ACTIVE_SPREADSHEET');
+		if (activeDbId)
 		{
-			return activeSpreadsheetId;
+			return activeDbId;
 		}
 
 		const dbKey = Webapp.getActiveDbKey();
 		const dbs = Webapp.getUserDbs();
 		const found = dbs.find(d => d.dbKey.toLowerCase() === dbKey.toLowerCase());
-		if (found && found.spreadsheetId)
+		if (found && found.dbId)
 		{
-			props.setProperty('MAESTRO_ACTIVE_SPREADSHEET', found.spreadsheetId);
-			return found.spreadsheetId;
+			props.setProperty('MAESTRO_ACTIVE_DB_ID', found.dbId);
+			return found.dbId;
 		}
 
 		try
 		{
 			const autoDb = Webapp.searchAutoDb() || Webapp.createAutoDb();
-			if (autoDb && autoDb.spreadsheetId)
+			if (autoDb && autoDb.dbId)
 			{
-				props.setProperty('MAESTRO_ACTIVE_SPREADSHEET', autoDb.spreadsheetId);
-				return autoDb.spreadsheetId;
+				props.setProperty('MAESTRO_ACTIVE_DB_ID', autoDb.dbId);
+				return autoDb.dbId;
 			}
 		}
-		catch (e) {}
+		catch (e)
+		{
+		}
 
-		throw new Error('Aucun identifiant de feuille de calcul (spreadsheetId) actif trouvé.');
+		throw new Error('Aucun identifiant de base de données (dbId) actif trouvé.');
 	}
 
-	static getCurrentDb(): GoogleAppsScript.Spreadsheet.Spreadsheet
+	static getDb(): Db
 	{
-		const spreadsheetId = Session.getActiveSpreadsheetId();
-		return SpreadsheetApp.openById(spreadsheetId);
+		const dbId = Session.getActiveDbId();
+		if (!cachedDb || cachedDbId !== dbId)
+		{
+			cachedDb = new Db(dbId);
+			cachedDbId = dbId;
+		}
+		return cachedDb;
 	}
 }

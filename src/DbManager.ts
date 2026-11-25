@@ -11,14 +11,14 @@ export class DbManager
 
 		const docName = name || ('Maestro DB ' + normalizedDbKey);
 		const ss = SpreadsheetApp.create(docName);
-		const spreadsheetId = ss.getId();
+		const dbId = ss.getId();
 
 		Drive.Files.update({
 			name: docName,
 			properties: {
 				MAESTRO_DATABASE_KEY: normalizedDbKey
 			}
-		}, spreadsheetId);
+		}, dbId);
 
 		const sheets = ss.getSheets();
 		let parametersSheet: GoogleAppsScript.Spreadsheet.Sheet;
@@ -49,7 +49,7 @@ export class DbManager
 
 		return {
 			dbKey: normalizedDbKey,
-			spreadsheetId: spreadsheetId
+			dbId: dbId
 		};
 	}
 
@@ -64,7 +64,7 @@ export class DbManager
 			const fileItem = result.files[0];
 			return {
 				dbKey: normalizedDbKey,
-				spreadsheetId: fileItem.id!
+				dbId: fileItem.id!
 			};
 		}
 
@@ -75,7 +75,7 @@ export class DbManager
 	{
 		const query = "properties has { key='MAESTRO_DATABASE_KEY' } and trashed = false";
 		const result = Drive.Files.list({ q: query });
-		const dbs: Array<{ dbKey: string; spreadsheetId: string }> = [];
+		const dbs: Array<{ dbKey: string; dbId: string }> = [];
 
 		if (result && result.files)
 		{
@@ -85,7 +85,7 @@ export class DbManager
 				{
 					dbs.push({
 						dbKey: item.properties['MAESTRO_DATABASE_KEY'].toLowerCase(),
-						spreadsheetId: item.id!
+						dbId: item.id!
 					});
 				}
 			});
@@ -94,11 +94,11 @@ export class DbManager
 		return dbs;
 	}
 
-	static getFileMetadata(spreadsheetId: string)
+	static getFileMetadata(dbId: string)
 	{
 		try
 		{
-			const file = Drive.Files.get(spreadsheetId);
+			const file = Drive.Files.get(dbId);
 			return {
 				name: file.name || 'Sans titre',
 				trashed: file.trashed || false
@@ -113,11 +113,11 @@ export class DbManager
 		}
 	}
 
-	static trashDb(spreadsheetId: string)
+	static trashDb(dbId: string)
 	{
 		try
 		{
-			Drive.Files.update({ trashed: true }, spreadsheetId);
+			Drive.Files.update({ trashed: true }, dbId);
 			return { success: true };
 		}
 		catch (e: any)

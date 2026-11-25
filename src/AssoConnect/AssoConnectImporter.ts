@@ -4,7 +4,7 @@ export class AssoConnectImporter
 {
 	static importStructures(fileId: string)
 	{
-		const targetSs = Session.getCurrentDb();
+		const targetSs = Session.getDb().getSpreadsheet();
 		const sourceSs = SpreadsheetApp.openById(fileId);
 		const sourceSheet = sourceSs.getSheets()[0];
 		const rows = sourceSheet.getDataRange().getValues();
@@ -41,7 +41,7 @@ export class AssoConnectImporter
 
 	static importUsers(fileId: string)
 	{
-		const targetSs = Session.getCurrentDb();
+		const targetSs = Session.getDb().getSpreadsheet();
 		const sourceSs = SpreadsheetApp.openById(fileId);
 		const sourceSheet = sourceSs.getSheets()[0];
 		const rows = sourceSheet.getDataRange().getValues();

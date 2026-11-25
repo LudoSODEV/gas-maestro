@@ -14,12 +14,12 @@ export const Webapp = {
 			.setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 	},
 
-	getUserDbs(): Array<{ dbKey: string; spreadsheetId: string; name?: string }>
+	getUserDbs(): Array<{ dbKey: string; dbId: string; name?: string }>
 	{
 		const props = PropertiesService.getUserProperties();
 		const rawData = props.getProperty('MAESTRO_DATABASES');
 
-		let dbs: Array<{ dbKey: string; spreadsheetId: string; name?: string }> = [];
+		let dbs: Array<{ dbKey: string; dbId: string; name?: string }> = [];
 		if (rawData)
 		{
 			try
@@ -34,9 +34,9 @@ export const Webapp = {
 
 		dbs.forEach(db =>
 		{
-			if (db.spreadsheetId && !db.spreadsheetId.startsWith('mock'))
+			if (db.dbId && !db.dbId.startsWith('mock'))
 			{
-				const meta = DbManager.getFileMetadata(db.spreadsheetId);
+				const meta = DbManager.getFileMetadata(db.dbId);
 				db.name = meta.name;
 			}
 			else
@@ -48,10 +48,10 @@ export const Webapp = {
 		return dbs;
 	},
 
-	saveUserDbs(dbs: Array<{ dbKey: string; spreadsheetId: string; name?: string }>)
+	saveUserDbs(dbs: Array<{ dbKey: string; dbId: string; name?: string }>)
 	{
 		const regex = /^[\w\.]{4,32}$/;
-		const resolvedDbs: Array<{ dbKey: string; spreadsheetId: string }> = [];
+		const resolvedDbs: Array<{ dbKey: string; dbId: string }> = [];
 
 		dbs.forEach(d =>
 		{
@@ -61,14 +61,14 @@ export const Webapp = {
 				throw new Error(`Clé de base de données invalide "${d.dbKey}" (doit respecter /^[\w\\.]{4,32}$/).`);
 			}
 
-			let spreadsheetId = d.spreadsheetId ? d.spreadsheetId.trim() : '';
+			let dbId = d.dbId ? d.dbId.trim() : '';
 
-			if (!spreadsheetId)
+			if (!dbId)
 			{
 				const created = DbManager.createDb(normalizedDbKey, d.name);
-				spreadsheetId = created.spreadsheetId;
+				dbId = created.dbId;
 			}
-			else if (!spreadsheetId.startsWith('mock'))
+			else if (!dbId.startsWith('mock'))
 			{
 				try
 				{
@@ -81,14 +81,14 @@ export const Webapp = {
 					{
 						updateResource.name = d.name;
 					}
-					Drive.Files.update(updateResource, spreadsheetId);
+					Drive.Files.update(updateResource, dbId);
 				}
 				catch (e) {}
 			}
 
 			resolvedDbs.push({
 				dbKey: normalizedDbKey,
-				spreadsheetId: spreadsheetId
+				dbId: dbId
 			});
 		});
 
@@ -120,11 +120,11 @@ export const Webapp = {
 		return { success: true };
 	},
 
-	trashDb(spreadsheetId: string, dbKey?: string)
+	trashDb(dbId: string, dbKey?: string)
 	{
-		DbManager.trashDb(spreadsheetId);
+		DbManager.trashDb(dbId);
 		const dbs = Webapp.getUserDbs();
-		const filtered = dbs.filter(d => d.spreadsheetId !== spreadsheetId && (!dbKey || d.dbKey !== dbKey));
+		const filtered = dbs.filter(d => d.dbId !== dbId && (!dbKey || d.dbKey !== dbKey));
 		Webapp.saveUserDbs(filtered);
 		return { success: true };
 	},
@@ -208,7 +208,7 @@ export const Webapp = {
 			const created = DbManager.createDb(dbKey, name);
 			db = {
 				dbKey: created.dbKey,
-				spreadsheetId: created.spreadsheetId,
+				dbId: created.dbId,
 				name: name
 			};
 			dbs.push(db);
