@@ -120,11 +120,11 @@ export const Webapp = {
 		return { success: true };
 	},
 
-	trashDb(dbId: string, dbKey?: string)
+	trashDb(dbId: string)
 	{
 		DbManager.trashDb(dbId);
 		const dbs = Webapp.getUserDbs();
-		const filtered = dbs.filter(d => d.dbId !== dbId && (!dbKey || d.dbKey !== dbKey));
+		const filtered = dbs.filter(d => d.dbId !== dbId);
 		Webapp.saveUserDbs(filtered);
 		return { success: true };
 	},

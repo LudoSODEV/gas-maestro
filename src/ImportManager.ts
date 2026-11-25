@@ -199,7 +199,7 @@ export class ImportManager
 		};
 	}
 
-	static executeImportAction(fileId: string, actionType: string, targetDbKey?: string)
+	static executeImportAction(fileId: string, actionType: string, targetDbId?: string)
 	{
 		if (actionType === 'IMPORT_ASSOCONNECT_STRUCTURES')
 		{
@@ -210,27 +210,22 @@ export class ImportManager
 			return AssoConnectImporter.importUsers(fileId);
 		}
 
-		let targetDbId = '';
-		const dbs = DbManager.listAccessibleDbs();
-		if (targetDbKey)
+		let resolvedDbId = targetDbId;
+		if (!resolvedDbId)
 		{
-			const found = dbs.find(d => d.dbKey === targetDbKey.toLowerCase());
-			if (found)
+			const dbs = DbManager.listAccessibleDbs();
+			if (dbs.length > 0)
 			{
-				targetDbId = found.dbId;
+				resolvedDbId = dbs[0].dbId;
 			}
 		}
-		if (!targetDbId && dbs.length > 0)
-		{
-			targetDbId = dbs[0].dbId;
-		}
 
-		if (!targetDbId)
+		if (!resolvedDbId)
 		{
 			throw new Error('Aucune base de données cible trouvée pour effectuer l\'importation.');
 		}
 
-		const targetSs = SpreadsheetApp.openById(targetDbId);
+		const targetSs = SpreadsheetApp.openById(resolvedDbId);
 
 		let sourceSheetName = actionType;
 		if (actionType === 'IMPORT_ASSOCONNECT_STRUCTURES')

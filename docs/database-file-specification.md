@@ -38,7 +38,7 @@ A DB file in **Maestro** is a dedicated Google Sheet acting as the primary local
   [
     {
       "dbKey": "ba13",
-      "spreadsheetId": "1aB2c3D4e5F6g7H8i9J0_example_id"
+      "dbId": "1aB2c3D4e5F6g7H8i9J0_example_id"
     }
   ]
   ```

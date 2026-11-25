@@ -95,11 +95,11 @@ Databases are saved per user as a JSON array string under the property key `MAES
 [
   {
     "dbKey": "ba13",
-    "spreadsheetId": "1aB2c3D4e5F6g7H8i9J0_example_id_1"
+    "dbId": "1aB2c3D4e5F6g7H8i9J0_example_id_1"
   },
   {
     "dbKey": "ba83",
-    "spreadsheetId": "9zY8x7W6v5U4t3S2r1Q0_example_id_2"
+    "dbId": "9zY8x7W6v5U4t3S2r1Q0_example_id_2"
   }
 ]
 ```
@@ -123,7 +123,7 @@ function saveUserDbs(dbs) {
 ### 4.3 Data Ingestion & Hygiene Flow (`DataProcessor.gs`)
 
 ```javascript
-function processUploadedFile(fileBlob, targetSpreadsheetId) {
+function processUploadedFile(fileBlob, targetDbId) {
   // 1. Store temporary file in executing user's Drive
   const tempFile = DriveApp.createFile(fileBlob);
   
@@ -133,7 +133,7 @@ function processUploadedFile(fileBlob, targetSpreadsheetId) {
     const parsedData = Utilities.parseCsv(content);
     
     // 3. Append to database using executing user's OAuth scope
-    const ss = SpreadsheetApp.openById(targetSpreadsheetId);
+    const ss = SpreadsheetApp.openById(targetDbId);
     const sheet = ss.getSheetByName('Database') || ss.getSheets()[0];
     
     sheet.getRange(sheet.getLastRow() + 1, 1, parsedData.length, parsedData[0].length)
@@ -150,8 +150,8 @@ function processUploadedFile(fileBlob, targetSpreadsheetId) {
 ### 4.4 Database Soft Protection (`SheetSetup.gs`)
 
 ```javascript
-function applySoftProtections(spreadsheetId) {
-  const ss = SpreadsheetApp.openById(spreadsheetId);
+function applySoftProtections(dbId) {
+  const ss = SpreadsheetApp.openById(dbId);
   const sheets = ss.getSheets();
   
   sheets.forEach(sheet => {
@@ -167,19 +167,19 @@ function applySoftProtections(spreadsheetId) {
 function createDb(dbKey) {
   const normalizedDbKey = dbKey.toLowerCase();
   const ss = SpreadsheetApp.create(`Maestro DB ${normalizedDbKey}`);
-  const spreadsheetId = ss.getId();
+  const dbId = ss.getId();
   
   // Tag the spreadsheet file with a custom Drive property using Drive API v3
   Drive.Files.update({
     properties: {
       MAESTRO_DATABASE_KEY: normalizedDbKey
     }
-  }, spreadsheetId);
+  }, dbId);
   
-  applySoftProtections(spreadsheetId);
+  applySoftProtections(dbId);
   return {
     dbKey: normalizedDbKey,
-    spreadsheetId: spreadsheetId
+    dbId: dbId
   };
 }
 
@@ -193,7 +193,7 @@ function listAccessibleDbs() {
       if (item.properties && item.properties.MAESTRO_DATABASE_KEY) {
         dbs.push({
           dbKey: item.properties.MAESTRO_DATABASE_KEY.toLowerCase(),
-          spreadsheetId: item.id
+          dbId: item.id
         });
       }
     });

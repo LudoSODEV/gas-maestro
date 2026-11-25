@@ -1,0 +1,1 @@
+- Replace "ba13" with "demo" in db management view

@@ -279,7 +279,7 @@ export default {
 					statusMessage.value = 'Erreur lors de la suppression: ' + err.message
 					statusColor.value = 'red'
 				})
-				.Maestro_trashDb(target.dbId, target.dbKey)
+				.Maestro_trashDb(target.dbId)
 		}
 
 		const saveDbs = () =>

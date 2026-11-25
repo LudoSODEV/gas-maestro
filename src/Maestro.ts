@@ -76,9 +76,9 @@ function Maestro_setActiveDbKey(dbKey: string)
 	return Webapp.setActiveDbKey(dbKey);
 }
 
-function Maestro_trashDb(spreadsheetId: string, dbKey?: string)
+function Maestro_trashDb(dbId: string)
 {
-	return Webapp.trashDb(spreadsheetId, dbKey);
+	return Webapp.trashDb(dbId);
 }
 
 function Maestro_stageImportFiles(files: any)
@@ -91,9 +91,9 @@ function Maestro_listStagedImports()
 	return ImportManager.listStagedImports();
 }
 
-function Maestro_executeImportAction(fileId: string, actionType: string, targetDbKey?: string)
+function Maestro_executeImportAction(fileId: string, actionType: string, targetDbId?: string)
 {
-	return ImportManager.executeImportAction(fileId, actionType, targetDbKey);
+	return ImportManager.executeImportAction(fileId, actionType, targetDbId);
 }
 
 function Maestro_discardImportFile(fileId: string)
